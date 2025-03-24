@@ -1,15 +1,16 @@
 package com.agendamiento.view;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Date;
 import java.util.Calendar;
+import java.util.Vector;
 import org.jdesktop.swingx.JXDatePicker;
 import org.jdesktop.swingx.calendar.SingleDaySelectionModel;
 import com.agendamiento.util.DatabaseConnection;
@@ -210,7 +211,7 @@ public class AgendamientoFrame extends JFrame {
                 tabbedPaneTiempo.setFont(new Font("Arial", Font.BOLD, 12));
                 
                 // Crear modelos y tablas para cada período de tiempo
-                String[] columnas = {"Día", "Mes", "Año", "Hora", "Nombre", "RUT", "Teléfono"};
+                String[] columnas = {"Día", "Mes", "Año", "Hora", "Nombre", "RUT", "Teléfono", "Acciones"};
                 
                 // Crear y almacenar modelos para esta cancha
                 DefaultTableModel modelHoy = new DefaultTableModel(columnas, 0) {
@@ -218,17 +219,34 @@ public class AgendamientoFrame extends JFrame {
                     public boolean isCellEditable(int row, int column) {
                         return false;
                     }
+                    
+                    @Override
+                    public Class<?> getColumnClass(int columnIndex) {
+                        return String.class;
+                    }
                 };
+                
                 DefaultTableModel modelSemana = new DefaultTableModel(columnas, 0) {
                     @Override
                     public boolean isCellEditable(int row, int column) {
                         return false;
                     }
+                    
+                    @Override
+                    public Class<?> getColumnClass(int columnIndex) {
+                        return String.class;
+                    }
                 };
+                
                 DefaultTableModel modelPosteriores = new DefaultTableModel(columnas, 0) {
                     @Override
                     public boolean isCellEditable(int row, int column) {
                         return false;
+                    }
+                    
+                    @Override
+                    public Class<?> getColumnClass(int columnIndex) {
+                        return String.class;
                     }
                 };
 
@@ -413,6 +431,8 @@ public class AgendamientoFrame extends JFrame {
 
     private void cargarAgendamientos() {
         try (Connection conn = DatabaseConnection.getConnection()) {
+            System.out.println("Iniciando carga de agendamientos...");
+            
             // Limpiar todas las tablas
             for (DefaultTableModel model : modelosHoy.values()) {
                 model.setRowCount(0);
@@ -424,13 +444,14 @@ public class AgendamientoFrame extends JFrame {
                 model.setRowCount(0);
             }
 
-            String sql = "SELECT a.*, c.nombre as cancha_nombre, " +
-                        "u.nombre as nombre_usuario, u.rut, u.telefono " +
+            String sql = "SELECT a.*, c.nombre as cancha_nombre " +
                         "FROM agendamientos a " +
                         "JOIN canchas c ON a.cancha_id = c.id " +
-                        "JOIN usuarios u ON a.usuario_id = u.id " +
                         "WHERE a.usuario_id = ? " +
                         "ORDER BY c.nombre, a.fecha, a.hora_inicio";
+            
+            System.out.println("SQL Query: " + sql);
+            System.out.println("Usuario ID: " + usuarioId);
             
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, usuarioId);
@@ -442,18 +463,24 @@ public class AgendamientoFrame extends JFrame {
                     cal.add(java.util.Calendar.DAY_OF_YEAR, 7);
                     java.util.Date finSemana = cal.getTime();
 
+                    int contadorAgendamientos = 0;
                     while (rs.next()) {
+                        contadorAgendamientos++;
                         String nombreCancha = rs.getString("cancha_nombre");
                         java.util.Date fechaAgendamiento = rs.getDate("fecha");
+                        
+                        System.out.println("Procesando agendamiento: Cancha=" + nombreCancha + 
+                                         ", Fecha=" + fechaAgendamiento);
                         
                         Object[] row = {
                             new java.text.SimpleDateFormat("dd").format(fechaAgendamiento),
                             new java.text.SimpleDateFormat("MMMM", new java.util.Locale("es", "ES")).format(fechaAgendamiento),
                             new java.text.SimpleDateFormat("yyyy").format(fechaAgendamiento),
                             rs.getTime("hora_inicio") + " - " + rs.getTime("hora_fin"),
-                            rs.getString("nombre_usuario"),
-                            rs.getString("rut"),
-                            rs.getString("telefono")
+                            rs.getString("nombre_cliente"),
+                            rs.getString("rut_cliente"),
+                            rs.getString("telefono_cliente"),
+                            "Eliminar"
                         };
 
                         // Obtener los modelos correspondientes a la cancha
@@ -461,15 +488,24 @@ public class AgendamientoFrame extends JFrame {
                         DefaultTableModel modelSemana = modelosSemana.get(nombreCancha);
                         DefaultTableModel modelPosteriores = modelosPosteriores.get(nombreCancha);
 
+                        if (modelHoy == null || modelSemana == null || modelPosteriores == null) {
+                            System.out.println("Error: Modelos no encontrados para la cancha " + nombreCancha);
+                            continue;
+                        }
+
                         // Clasificar el agendamiento según la fecha
-                        if (fechaAgendamiento.equals(hoy)) {
+                        if (fechaEsHoy(fechaAgendamiento)) {
                             modelHoy.addRow(row);
+                            System.out.println("Agregado a Hoy: " + nombreCancha);
                         } else if (fechaAgendamiento.after(hoy) && fechaAgendamiento.before(finSemana)) {
                             modelSemana.addRow(row);
+                            System.out.println("Agregado a Esta Semana: " + nombreCancha);
                         } else if (fechaAgendamiento.after(hoy)) {
                             modelPosteriores.addRow(row);
+                            System.out.println("Agregado a Posteriores: " + nombreCancha);
                         }
                     }
+                    System.out.println("Total de agendamientos procesados: " + contadorAgendamientos);
                 }
             }
 
@@ -483,28 +519,30 @@ public class AgendamientoFrame extends JFrame {
             for (JTable tabla : tablasPosteriores.values()) {
                 ajustarAnchoColumnas(tabla);
             }
-
-            // Inicializar campos vacíos
-            txtNombre.setText("");
-            txtRut.setText("");
-            txtTelefono.setText("");
-            cmbHoraInicio.setSelectedIndex(0);
-            cmbHoraFin.setSelectedIndex(0);
-            datePicker.setDate(Calendar.getInstance().getTime());
         } catch (SQLException ex) {
+            System.out.println("Error al cargar agendamientos: " + ex.getMessage());
+            ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error al cargar agendamientos: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private boolean fechaEsHoy(Date fecha) {
+        Calendar cal1 = Calendar.getInstance();
+        Calendar cal2 = Calendar.getInstance();
+        cal1.setTime(fecha);
+        cal2.setTime(new Date());
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+               cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
     }
 
     private void cargarAgendamientosPorCancha(Connection conn, String nombreCancha, 
             DefaultTableModel modelHoy, DefaultTableModel modelSemana, DefaultTableModel modelPosteriores) 
             throws SQLException {
         
-        String sql = "SELECT a.*, u.nombre as nombre_usuario, u.rut, u.telefono " +
+        String sql = "SELECT a.*, c.nombre as cancha_nombre " +
                     "FROM agendamientos a " +
                     "JOIN canchas c ON a.cancha_id = c.id " +
-                    "JOIN usuarios u ON a.usuario_id = u.id " +
                     "WHERE a.usuario_id = ? AND c.nombre = ? " +
                     "ORDER BY a.fecha, a.hora_inicio";
                     
@@ -527,9 +565,10 @@ public class AgendamientoFrame extends JFrame {
                 new java.text.SimpleDateFormat("MMMM", new java.util.Locale("es", "ES")).format(fechaAgendamiento),
                 new java.text.SimpleDateFormat("yyyy").format(fechaAgendamiento),
                 rs.getTime("hora_inicio") + " - " + rs.getTime("hora_fin"),
-                rs.getString("nombre_usuario"),
-                rs.getString("rut"),
-                rs.getString("telefono")
+                rs.getString("nombre_cliente"),
+                rs.getString("rut_cliente"),
+                rs.getString("telefono_cliente"),
+                "Eliminar"
             };
 
             // Clasificar el agendamiento según la fecha
@@ -544,39 +583,205 @@ public class AgendamientoFrame extends JFrame {
     }
 
     private void ajustarAnchoColumnas(JTable tabla) {
-        // Ajustar el ancho de las columnas según el contenido
-        int[] anchos = {60, 120, 80, 120, 150, 100, 100}; // Agregado ancho para la columna de teléfono
-        for (int i = 0; i < tabla.getColumnCount(); i++) {
-            tabla.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
+        if (tabla == null || tabla.getColumnCount() == 0) {
+            System.out.println("Error: Tabla nula o sin columnas");
+            return;
         }
+
+        // Ajustar el ancho de las columnas según el contenido
+        int[] anchos = {60, 100, 70, 150, 150, 100, 100, 80};
+        
+        for (int i = 0; i < tabla.getColumnCount() && i < anchos.length; i++) {
+            TableColumn columna = tabla.getColumnModel().getColumn(i);
+            columna.setPreferredWidth(anchos[i]);
+            columna.setMinWidth(anchos[i]);
+            
+            // La última columna (Acciones) tiene un ancho fijo
+            if (i == tabla.getColumnCount() - 1) {
+                columna.setMaxWidth(anchos[i]);
+            }
+        }
+        
+        // Configurar la altura de las filas
+        tabla.setRowHeight(35);
     }
 
     private JTable crearTablaPersonalizada(DefaultTableModel modelo) {
-        // Actualizar las columnas para incluir teléfono
-        String[] columnas = {"Día", "Mes", "Año", "Hora", "Nombre", "RUT", "Teléfono"};
-        modelo.setColumnIdentifiers(columnas);
-
+        // Crear la tabla con el modelo proporcionado
         JTable tabla = new JTable(modelo);
-        tabla.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        // Configurar la apariencia de la tabla
         tabla.setRowHeight(30);
-        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        tabla.setIntercellSpacing(new Dimension(10, 5));
+        tabla.setGridColor(Color.LIGHT_GRAY);
+        tabla.setShowVerticalLines(true);
+        tabla.setShowHorizontalLines(true);
+        tabla.getTableHeader().setReorderingAllowed(false);
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabla.setShowGrid(true);
-        tabla.setGridColor(new Color(230, 230, 230));
-        tabla.setBackground(Color.WHITE);
-        tabla.getTableHeader().setBackground(new Color(240, 240, 240));
-        tabla.getTableHeader().setForeground(Color.BLACK);
-        tabla.setSelectionBackground(new Color(51, 153, 255));
-        tabla.setSelectionForeground(Color.WHITE);
+        tabla.setAutoCreateRowSorter(true);
 
-        // Renderizador personalizado para las celdas
+        // Configurar el renderizador para centrar el contenido
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < tabla.getColumnCount(); i++) {
+
+        // Aplicar el renderizador centrado a todas las columnas excepto la última
+        for (int i = 0; i < tabla.getColumnCount() - 1; i++) {
             tabla.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
+        // Configurar el renderizador para el botón eliminar
+        tabla.getColumnModel().getColumn(tabla.getColumnCount() - 1).setCellRenderer(new DefaultTableCellRenderer() {
+            private final JButton button = new JButton("Eliminar");
+            {
+                button.setBackground(new Color(220, 53, 69));
+                button.setForeground(Color.WHITE);
+                button.setOpaque(true);
+                button.setBorderPainted(false);
+                button.setFocusPainted(false);
+            }
+
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                return button;
+            }
+        });
+
+        // Configurar el manejador de clics para el botón eliminar
+        tabla.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int column = tabla.columnAtPoint(e.getPoint());
+                int row = tabla.rowAtPoint(e.getPoint());
+
+                if (row >= 0 && column == tabla.getColumnCount() - 1) {
+                    int response = JOptionPane.showConfirmDialog(
+                        SwingUtilities.getWindowAncestor(tabla),
+                        "¿Está seguro que desea eliminar este agendamiento?",
+                        "Confirmar eliminación",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    
+                    if (response == JOptionPane.YES_OPTION) {
+                        try {
+                            eliminarAgendamiento(tabla, row);
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(null,
+                                "Error al eliminar el agendamiento: " + ex.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                int column = tabla.columnAtPoint(e.getPoint());
+                if (column == tabla.getColumnCount() - 1) {
+                    tabla.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                tabla.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+        });
+
         return tabla;
+    }
+
+    private void eliminarAgendamiento(JTable tabla, int row) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            DefaultTableModel model = (DefaultTableModel) tabla.getModel();
+            
+            // Obtener los datos de la fila
+            String dia = model.getValueAt(row, 0).toString();
+            String mes = model.getValueAt(row, 1).toString();
+            String año = model.getValueAt(row, 2).toString();
+            String hora = model.getValueAt(row, 3).toString();
+            String rut = model.getValueAt(row, 5).toString();
+            
+            // Construir la fecha en formato correcto para MySQL
+            String fecha = String.format("%s-%s-%s", año, obtenerNumeroMes(mes), dia);
+            String[] horas = hora.split(" - ");
+            
+            // Primero obtener el ID del agendamiento
+            String sqlSelect = "SELECT id FROM agendamientos " +
+                             "WHERE usuario_id = ? " +
+                             "AND DATE(fecha) = ? " +
+                             "AND TIME(hora_inicio) = ? " +
+                             "AND TIME(hora_fin) = ? " +
+                             "AND rut_cliente = ? " +
+                             "LIMIT 1";
+            
+            try (PreparedStatement pstmtSelect = conn.prepareStatement(sqlSelect)) {
+                pstmtSelect.setInt(1, usuarioId);
+                pstmtSelect.setString(2, fecha);
+                pstmtSelect.setString(3, horas[0]);
+                pstmtSelect.setString(4, horas[1]);
+                pstmtSelect.setString(5, rut);
+                
+                ResultSet rs = pstmtSelect.executeQuery();
+                if (rs.next()) {
+                    int agendamientoId = rs.getInt("id");
+                    
+                    // Ahora eliminar usando el ID
+                    String sqlDelete = "DELETE FROM agendamientos WHERE id = ?";
+                    try (PreparedStatement pstmtDelete = conn.prepareStatement(sqlDelete)) {
+                        pstmtDelete.setInt(1, agendamientoId);
+                        
+                        int filasAfectadas = pstmtDelete.executeUpdate();
+                        if (filasAfectadas > 0) {
+                            JOptionPane.showMessageDialog(null, 
+                                "Agendamiento eliminado exitosamente",
+                                "Éxito",
+                                JOptionPane.INFORMATION_MESSAGE);
+                            
+                            // Recargar los agendamientos
+                            SwingUtilities.invokeLater(() -> {
+                                cargarAgendamientos();
+                                tabla.repaint();
+                            });
+                        } else {
+                            JOptionPane.showMessageDialog(null,
+                                "No se pudo eliminar el agendamiento",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                        "No se encontró el agendamiento para eliminar",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null,
+                "Error al eliminar el agendamiento: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private String obtenerNumeroMes(String nombreMes) {
+        Map<String, String> meses = new HashMap<>();
+        meses.put("enero", "01");
+        meses.put("febrero", "02");
+        meses.put("marzo", "03");
+        meses.put("abril", "04");
+        meses.put("mayo", "05");
+        meses.put("junio", "06");
+        meses.put("julio", "07");
+        meses.put("agosto", "08");
+        meses.put("septiembre", "09");
+        meses.put("octubre", "10");
+        meses.put("noviembre", "11");
+        meses.put("diciembre", "12");
+        return meses.get(nombreMes.toLowerCase());
     }
 
     private void realizarAgendamiento() {
@@ -624,51 +829,75 @@ public class AgendamientoFrame extends JFrame {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Obtener ID de la cancha
-            String sqlCancha = "SELECT id FROM canchas WHERE nombre = ? AND tipo = ?";
-            PreparedStatement pstmtCancha = conn.prepareStatement(sqlCancha);
-            pstmtCancha.setString(1, nombreCancha);
-            pstmtCancha.setString(2, tipoCancha);
-            ResultSet rsCancha = pstmtCancha.executeQuery();
-            
-            if (!rsCancha.next()) {
-                throw new SQLException("Cancha no encontrada");
+            conn.setAutoCommit(false); // Iniciar transacción
+
+            try {
+                // Obtener ID de la cancha
+                String sqlCancha = "SELECT id FROM canchas WHERE nombre = ? AND tipo = ?";
+                PreparedStatement pstmtCancha = conn.prepareStatement(sqlCancha);
+                pstmtCancha.setString(1, nombreCancha);
+                pstmtCancha.setString(2, tipoCancha);
+                ResultSet rsCancha = pstmtCancha.executeQuery();
+                
+                if (!rsCancha.next()) {
+                    throw new SQLException("Cancha no encontrada");
+                }
+                int canchaId = rsCancha.getInt("id");
+
+                // Verificar si ya existe un agendamiento para la misma cancha, fecha y hora
+                String sqlCheckAgendamiento = "SELECT COUNT(*) FROM agendamientos " +
+                    "WHERE cancha_id = ? AND fecha = ? AND " +
+                    "((hora_inicio <= ? AND hora_fin > ?) OR " +
+                    "(hora_inicio < ? AND hora_fin >= ?) OR " +
+                    "(hora_inicio >= ? AND hora_fin <= ?))";
+                
+                PreparedStatement pstmtCheck = conn.prepareStatement(sqlCheckAgendamiento);
+                pstmtCheck.setInt(1, canchaId);
+                pstmtCheck.setDate(2, new java.sql.Date(fechaSeleccionada.getTime()));
+                pstmtCheck.setTime(3, Time.valueOf(horaInicio));
+                pstmtCheck.setTime(4, Time.valueOf(horaInicio));
+                pstmtCheck.setTime(5, Time.valueOf(horaFin));
+                pstmtCheck.setTime(6, Time.valueOf(horaFin));
+                pstmtCheck.setTime(7, Time.valueOf(horaInicio));
+                pstmtCheck.setTime(8, Time.valueOf(horaFin));
+                
+                ResultSet rsCheck = pstmtCheck.executeQuery();
+                rsCheck.next();
+                if (rsCheck.getInt(1) > 0) {
+                    throw new SQLException("Ya existe un agendamiento para este horario");
+                }
+
+                // Insertar agendamiento con los datos personales
+                String sqlAgendamiento = "INSERT INTO agendamientos (usuario_id, cancha_id, fecha, hora_inicio, hora_fin, nombre_cliente, rut_cliente, telefono_cliente) " +
+                                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement pstmtAgendamiento = conn.prepareStatement(sqlAgendamiento);
+                pstmtAgendamiento.setInt(1, usuarioId);
+                pstmtAgendamiento.setInt(2, canchaId);
+                pstmtAgendamiento.setDate(3, new java.sql.Date(fechaSeleccionada.getTime()));
+                pstmtAgendamiento.setTime(4, Time.valueOf(horaInicio));
+                pstmtAgendamiento.setTime(5, Time.valueOf(horaFin));
+                pstmtAgendamiento.setString(6, nombre);
+                pstmtAgendamiento.setString(7, rut);
+                pstmtAgendamiento.setString(8, telefono);
+                pstmtAgendamiento.executeUpdate();
+
+                conn.commit(); // Confirmar transacción
+                JOptionPane.showMessageDialog(this, "Agendamiento realizado exitosamente!");
+                
+                // Limpiar los campos después del agendamiento exitoso
+                txtNombre.setText("");
+                txtRut.setText("");
+                txtTelefono.setText("");
+                cmbHoraInicio.setSelectedIndex(0);
+                cmbHoraFin.setSelectedIndex(0);
+                datePicker.setDate(Calendar.getInstance().getTime());
+                
+                // Recargar los agendamientos
+                cargarAgendamientos();
+            } catch (SQLException ex) {
+                conn.rollback(); // Revertir transacción en caso de error
+                throw ex;
             }
-            int canchaId = rsCancha.getInt("id");
-
-            // Actualizar datos del usuario
-            String sqlUpdateUser = "UPDATE usuarios SET nombre = ?, rut = ?, telefono = ? WHERE id = ?";
-            PreparedStatement pstmtUser = conn.prepareStatement(sqlUpdateUser);
-            pstmtUser.setString(1, nombre);
-            pstmtUser.setString(2, rut);
-            pstmtUser.setString(3, telefono);
-            pstmtUser.setInt(4, usuarioId);
-            pstmtUser.executeUpdate();
-
-            // Insertar agendamiento usando la fecha del datePicker
-            String sql = "INSERT INTO agendamientos (usuario_id, cancha_id, fecha, hora_inicio, hora_fin) " +
-                        "VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, usuarioId);
-            pstmt.setInt(2, canchaId);
-            pstmt.setDate(3, new java.sql.Date(datePicker.getDate().getTime()));
-            pstmt.setTime(4, Time.valueOf(horaInicio));
-            pstmt.setTime(5, Time.valueOf(horaFin));
-            
-            pstmt.executeUpdate();
-
-            JOptionPane.showMessageDialog(this, "Agendamiento realizado exitosamente!");
-            
-            // Limpiar los campos después del agendamiento exitoso
-            txtNombre.setText("");
-            txtRut.setText("");
-            txtTelefono.setText("");
-            cmbHoraInicio.setSelectedIndex(0);
-            cmbHoraFin.setSelectedIndex(0);
-            datePicker.setDate(Calendar.getInstance().getTime()); // Resetear la fecha al día actual
-            
-            // Recargar los agendamientos
-            cargarAgendamientos();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error al realizar agendamiento: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);

@@ -3,7 +3,7 @@ package com.agendamiento.util;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
+import java.sql.Statement;
 
 public class DatabaseConnection {
     private static final String URL = "jdbc:mysql://localhost:3306/agendamiento_canchas";
@@ -15,18 +15,17 @@ public class DatabaseConnection {
             // Cargar el driver explícitamente
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // Configurar propiedades adicionales
-            Properties props = new Properties();
-            props.setProperty("user", USER);
-            props.setProperty("password", PASSWORD);
-            props.setProperty("useSSL", "false");
-            props.setProperty("allowPublicKeyRetrieval", "true");
-            props.setProperty("serverTimezone", "America/Santiago");
-            props.setProperty("autoReconnect", "true");
-
             // Intentar la conexión con timeout
-            DriverManager.setLoginTimeout(5);
-            Connection conn = DriverManager.getConnection(URL, props);
+            Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/agendamiento_canchas?allowPublicKeyRetrieval=true&useSSL=false",
+                "root",
+                "peteto10"
+            );
+            
+            // Desactivar el modo seguro
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("SET SQL_SAFE_UPDATES = 0");
+            }
             
             // Verificar la conexión
             if (conn == null || conn.isClosed()) {
