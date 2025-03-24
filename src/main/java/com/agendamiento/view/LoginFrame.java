@@ -20,14 +20,14 @@ public class LoginFrame extends JFrame {
         setSize(400, 300);
         setLocationRelativeTo(null);
 
-        // Panel principal
+        // `anel principal
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Título
-        JLabel lblTitulo = new JLabel("Sistema de Agendamiento de Canchas");
+        // titulo
+        JLabel lblTitulo = new JLabel("Bienvenido a las canchas de joselito");
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 16));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -35,7 +35,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(20, 5, 20, 5);
         mainPanel.add(lblTitulo, gbc);
 
-        // Usuario
+        // usuario
         gbc.gridwidth = 1;
         gbc.gridy = 1;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -45,7 +45,7 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 1;
         mainPanel.add(txtUsuario, gbc);
 
-        // Contraseña
+        // contraseña
         gbc.gridx = 0;
         gbc.gridy = 2;
         mainPanel.add(new JLabel("Contraseña:"), gbc);
@@ -54,10 +54,10 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 1;
         mainPanel.add(txtPassword, gbc);
 
-        // Botones
+        // botones
         JPanel buttonPanel = new JPanel();
-        btnLogin = new JButton("Iniciar Sesión");
-        btnRegistro = new JButton("Registrarse");
+        btnLogin = new JButton("Iniciar sesion");
+        btnRegistro = new JButton("registrarse");
         buttonPanel.add(btnLogin);
         buttonPanel.add(btnRegistro);
 
@@ -67,7 +67,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(20, 5, 10, 5);
         mainPanel.add(buttonPanel, gbc);
 
-        // Eventos
+        // eventos
         btnLogin.addActionListener(e -> login());
         btnRegistro.addActionListener(e -> abrirRegistro());
 
@@ -85,7 +85,7 @@ public class LoginFrame extends JFrame {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Verificar si la conexión está activa
+            //error por si la conexion a la base no agarra
             if (conn == null || conn.isClosed()) {
                 throw new SQLException("No se pudo establecer la conexión con la base de datos");
             }
@@ -107,7 +107,7 @@ public class LoginFrame extends JFrame {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace(); // Imprimir el stack trace en la consola
+            ex.printStackTrace(); // consloa avisa error
             String errorMessage = "Error al conectar con la base de datos\n" +
                                 "Detalles: " + ex.getMessage();
             if (ex.getCause() != null) {
