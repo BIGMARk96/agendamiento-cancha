@@ -1,39 +1,35 @@
 package com.agendamiento.util;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
 public class TestConnection {
     public static void main(String[] args) {
         try {
             System.out.println("Intentando conectar a la base de datos...");
-            Connection conn = DatabaseConnection.getConnection();
-            System.out.println("¡Conexión exitosa!");
-
-            // Probar consulta simple
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM canchas");
+            System.out.println("Driver de MySQL: " + com.mysql.cj.jdbc.Driver.class.getName());
             
-            System.out.println("\nCanchas disponibles:");
-            while (rs.next()) {
-                System.out.printf("ID: %d, Nombre: %s, Tipo: %s, Precio: $%.2f%n",
-                    rs.getInt("id"),
-                    rs.getString("nombre"),
-                    rs.getString("tipo"),
-                    rs.getDouble("precio_hora"));
-            }
-
-            // Cerrar conexiones
-            rs.close();
-            stmt.close();
+            Connection conn = DatabaseConnection.getConnection();
+            DatabaseMetaData metaData = conn.getMetaData();
+            
+            System.out.println("¡Conexión exitosa!");
+            System.out.println("URL de la base de datos: " + metaData.getURL());
+            System.out.println("Usuario: " + metaData.getUserName());
+            System.out.println("Versión del servidor: " + metaData.getDatabaseProductVersion());
+            
             conn.close();
-            System.out.println("\nConexión cerrada correctamente.");
-
         } catch (Exception e) {
-            System.err.println("Error al conectar a la base de datos:");
-            System.err.println(e.getMessage());
+            System.out.println("Error detallado:");
             e.printStackTrace();
+            
+            // Imprimir la cadena de excepciones
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                System.out.println("Causado por:");
+                cause.printStackTrace();
+                cause = cause.getCause();
+            }
         }
     }
 } 

@@ -5,6 +5,7 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import com.agendamiento.util.DatabaseConnection;
 
 public class LoginFrame extends JFrame {
@@ -77,24 +78,43 @@ public class LoginFrame extends JFrame {
         String usuario = txtUsuario.getText();
         String password = new String(txtPassword.getPassword());
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT * FROM usuarios WHERE usuario = ? AND password = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, usuario);
-            pstmt.setString(2, password);
-            ResultSet rs = pstmt.executeQuery();
+        if (usuario.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor ingrese usuario y contraseña",
+                    "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-            if (rs.next()) {
-                JOptionPane.showMessageDialog(this, "Login exitoso!");
-                this.dispose();
-                new AgendamientoFrame(rs.getInt("id")).setVisible(true);
-            } else {
-                JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Verificar si la conexión está activa
+            if (conn == null || conn.isClosed()) {
+                throw new SQLException("No se pudo establecer la conexión con la base de datos");
+            }
+
+            String sql = "SELECT id, usuario, nombre, rut, telefono FROM usuarios WHERE usuario = ? AND password = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, usuario);
+                pstmt.setString(2, password);
+                
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        JOptionPane.showMessageDialog(this, "¡Bienvenido " + rs.getString("nombre") + "!");
+                        this.dispose();
+                        new AgendamientoFrame(rs.getInt("id")).setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos",
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al conectar con la base de datos",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace(); // Imprimir el stack trace en la consola
+            String errorMessage = "Error al conectar con la base de datos\n" +
+                                "Detalles: " + ex.getMessage();
+            if (ex.getCause() != null) {
+                errorMessage += "\nCausa: " + ex.getCause().getMessage();
+            }
+            JOptionPane.showMessageDialog(this, errorMessage,
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }
 

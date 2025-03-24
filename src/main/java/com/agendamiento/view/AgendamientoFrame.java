@@ -20,14 +20,16 @@ public class AgendamientoFrame extends JFrame {
     private JTextField txtNombre;
     private JTextField txtRut;
     private JTextField txtTelefono;
-    private DefaultTableModel modelHoy;
-    private DefaultTableModel modelSemana;
-    private DefaultTableModel modelPosteriores;
-    private JTable tblHoy;
-    private JTable tblSemana;
-    private JTable tblPosteriores;
     private Map<String, ImageIcon> imagenesCanchas;
     private String canchaSeleccionada = null;
+
+    // Modelos y tablas para cada cancha
+    private Map<String, DefaultTableModel> modelosHoy = new HashMap<>();
+    private Map<String, DefaultTableModel> modelosSemana = new HashMap<>();
+    private Map<String, DefaultTableModel> modelosPosteriores = new HashMap<>();
+    private Map<String, JTable> tablasHoy = new HashMap<>();
+    private Map<String, JTable> tablasSemana = new HashMap<>();
+    private Map<String, JTable> tablasPosteriores = new HashMap<>();
 
     public AgendamientoFrame(int usuarioId) {
         this.usuarioId = usuarioId;
@@ -125,6 +127,21 @@ public class AgendamientoFrame extends JFrame {
         calendar.getDayChooser().setSundayForeground(new Color(255, 0, 0));
         calendar.getMonthChooser().setBackground(Color.WHITE);
         calendar.getYearChooser().setBackground(Color.WHITE);
+        
+        // Configurar el color de selección usando el panel del día
+        JPanel dayChooserPanel = calendar.getDayChooser();
+        for (Component comp : dayChooserPanel.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel panel = (JPanel) comp;
+                for (Component button : panel.getComponents()) {
+                    if (button instanceof JButton) {
+                        button.setBackground(new Color(255, 0, 0));
+                        button.setForeground(Color.WHITE);
+                    }
+                }
+            }
+        }
+        
         gbc.gridx = 1;
         centerPanel.add(calendar, gbc);
 
@@ -169,60 +186,93 @@ public class AgendamientoFrame extends JFrame {
         rightPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(51, 153, 255), 2), "Mis Agendamientos"));
         rightPanel.setPreferredSize(new Dimension(900, 0));
 
-        // Panel con pestañas para diferentes vistas de agendamientos
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("Arial", Font.BOLD, 14));
-
-        // Crear modelos de tabla para cada categoría
-        String[] columnas = {"Cancha", "Día", "Mes", "Año", "Hora", "Nombre", "RUT"};
+        // Panel con pestañas para diferentes canchas
+        JTabbedPane tabbedPaneCanchas = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPaneCanchas.setFont(new Font("Arial", Font.BOLD, 14));
         
-        modelHoy = new DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Obtener todas las canchas
+            String sqlCanchas = "SELECT DISTINCT c.nombre, c.tipo FROM canchas c ORDER BY c.nombre";
+            Statement stmtCanchas = conn.createStatement();
+            ResultSet rsCanchas = stmtCanchas.executeQuery(sqlCanchas);
+
+            while (rsCanchas.next()) {
+                String nombreCancha = rsCanchas.getString("nombre");
+                String tipoCancha = rsCanchas.getString("tipo");
+                
+                // Crear panel para esta cancha
+                JPanel canchaPanel = new JPanel(new BorderLayout());
+                
+                // Crear pestañas de tiempo para esta cancha
+                JTabbedPane tabbedPaneTiempo = new JTabbedPane(JTabbedPane.TOP);
+                tabbedPaneTiempo.setFont(new Font("Arial", Font.BOLD, 12));
+                
+                // Crear modelos y tablas para cada período de tiempo
+                String[] columnas = {"Día", "Mes", "Año", "Hora", "Nombre", "RUT", "Teléfono"};
+                
+                // Crear y almacenar modelos para esta cancha
+                DefaultTableModel modelHoy = new DefaultTableModel(columnas, 0) {
+                    @Override
+                    public boolean isCellEditable(int row, int column) {
+                        return false;
+                    }
+                };
+                DefaultTableModel modelSemana = new DefaultTableModel(columnas, 0) {
+                    @Override
+                    public boolean isCellEditable(int row, int column) {
+                        return false;
+                    }
+                };
+                DefaultTableModel modelPosteriores = new DefaultTableModel(columnas, 0) {
+                    @Override
+                    public boolean isCellEditable(int row, int column) {
+                        return false;
+                    }
+                };
+
+                // Almacenar los modelos en los mapas
+                modelosHoy.put(nombreCancha, modelHoy);
+                modelosSemana.put(nombreCancha, modelSemana);
+                modelosPosteriores.put(nombreCancha, modelPosteriores);
+
+                // Crear y almacenar tablas
+                JTable tblHoy = crearTablaPersonalizada(modelHoy);
+                JTable tblSemana = crearTablaPersonalizada(modelSemana);
+                JTable tblPosteriores = crearTablaPersonalizada(modelPosteriores);
+
+                tablasHoy.put(nombreCancha, tblHoy);
+                tablasSemana.put(nombreCancha, tblSemana);
+                tablasPosteriores.put(nombreCancha, tblPosteriores);
+
+                // Agregar las tablas a scrollpanes
+                JScrollPane scrollHoy = new JScrollPane(tblHoy);
+                JScrollPane scrollSemana = new JScrollPane(tblSemana);
+                JScrollPane scrollPosteriores = new JScrollPane(tblPosteriores);
+
+                // Agregar las pestañas de tiempo
+                tabbedPaneTiempo.addTab("Hoy", scrollHoy);
+                tabbedPaneTiempo.addTab("Esta Semana", scrollSemana);
+                tabbedPaneTiempo.addTab("Posteriores", scrollPosteriores);
+
+                // Cargar los agendamientos para esta cancha
+                cargarAgendamientosPorCancha(conn, nombreCancha, modelHoy, modelSemana, modelPosteriores);
+
+                // Ajustar anchos de columna
+                ajustarAnchoColumnas(tblHoy);
+                ajustarAnchoColumnas(tblSemana);
+                ajustarAnchoColumnas(tblPosteriores);
+
+                canchaPanel.add(tabbedPaneTiempo, BorderLayout.CENTER);
+                
+                // Agregar la pestaña de la cancha
+                tabbedPaneCanchas.addTab(nombreCancha, canchaPanel);
             }
-        };
-        
-        modelSemana = new DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        
-        modelPosteriores = new DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al cargar canchas: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
 
-        // Crear tablas para cada categoría
-        tblHoy = crearTablaPersonalizada(modelHoy);
-        tblSemana = crearTablaPersonalizada(modelSemana);
-        tblPosteriores = crearTablaPersonalizada(modelPosteriores);
-
-        // Agregar tablas a paneles con scroll
-        JScrollPane scrollHoy = new JScrollPane(tblHoy);
-        JScrollPane scrollSemana = new JScrollPane(tblSemana);
-        JScrollPane scrollPosteriores = new JScrollPane(tblPosteriores);
-
-        // Personalizar apariencia de las pestañas
-        tabbedPane.addTab("Hoy", scrollHoy);
-        tabbedPane.addTab("Esta Semana", scrollSemana);
-        tabbedPane.addTab("Posteriores", scrollPosteriores);
-
-        // Establecer el color de fondo del panel de pestañas
-        tabbedPane.setBackground(Color.WHITE);
-        tabbedPane.setForeground(Color.BLACK);
-        
-        // Agregar padding al panel derecho
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(
-            rightPanel.getBorder(),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-
-        rightPanel.add(tabbedPane, BorderLayout.CENTER);
+        rightPanel.add(tabbedPaneCanchas, BorderLayout.CENTER);
 
         // Agregar paneles al panel principal
         mainPanel.add(leftPanel, BorderLayout.WEST);
@@ -360,67 +410,89 @@ public class AgendamientoFrame extends JFrame {
     }
 
     private void cargarAgendamientos() {
-        // Limpiar todas las tablas
-        modelHoy.setRowCount(0);
-        modelSemana.setRowCount(0);
-        modelPosteriores.setRowCount(0);
-
         try (Connection conn = DatabaseConnection.getConnection()) {
+            // Limpiar todas las tablas
+            for (DefaultTableModel model : modelosHoy.values()) {
+                model.setRowCount(0);
+            }
+            for (DefaultTableModel model : modelosSemana.values()) {
+                model.setRowCount(0);
+            }
+            for (DefaultTableModel model : modelosPosteriores.values()) {
+                model.setRowCount(0);
+            }
+
             String sql = "SELECT a.*, c.nombre as cancha_nombre, " +
-                        "u.nombre as nombre_usuario, u.rut " +
+                        "u.nombre as nombre_usuario, u.rut, u.telefono " +
                         "FROM agendamientos a " +
                         "JOIN canchas c ON a.cancha_id = c.id " +
                         "JOIN usuarios u ON a.usuario_id = u.id " +
                         "WHERE a.usuario_id = ? " +
                         "ORDER BY c.nombre, a.fecha, a.hora_inicio";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, usuarioId);
-            ResultSet rs = pstmt.executeQuery();
+            
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, usuarioId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    // Obtener fecha actual
+                    java.util.Date hoy = new java.util.Date();
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    cal.setTime(hoy);
+                    cal.add(java.util.Calendar.DAY_OF_YEAR, 7);
+                    java.util.Date finSemana = cal.getTime();
 
-            // Obtener fecha actual
-            java.util.Date hoy = new java.util.Date();
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTime(hoy);
-            cal.add(java.util.Calendar.DAY_OF_YEAR, 7);
-            java.util.Date finSemana = cal.getTime();
+                    while (rs.next()) {
+                        String nombreCancha = rs.getString("cancha_nombre");
+                        java.util.Date fechaAgendamiento = rs.getDate("fecha");
+                        
+                        Object[] row = {
+                            new java.text.SimpleDateFormat("dd").format(fechaAgendamiento),
+                            new java.text.SimpleDateFormat("MMMM", new java.util.Locale("es", "ES")).format(fechaAgendamiento),
+                            new java.text.SimpleDateFormat("yyyy").format(fechaAgendamiento),
+                            rs.getTime("hora_inicio") + " - " + rs.getTime("hora_fin"),
+                            rs.getString("nombre_usuario"),
+                            rs.getString("rut"),
+                            rs.getString("telefono")
+                        };
 
-            while (rs.next()) {
-                java.util.Date fechaAgendamiento = rs.getDate("fecha");
-                Object[] row = {
-                    rs.getString("cancha_nombre"),
-                    new java.text.SimpleDateFormat("dd").format(fechaAgendamiento),
-                    new java.text.SimpleDateFormat("MMMM", new java.util.Locale("es", "ES")).format(fechaAgendamiento),
-                    new java.text.SimpleDateFormat("yyyy").format(fechaAgendamiento),
-                    rs.getTime("hora_inicio") + " - " + rs.getTime("hora_fin"),
-                    rs.getString("nombre_usuario"),
-                    rs.getString("rut")
-                };
+                        // Obtener los modelos correspondientes a la cancha
+                        DefaultTableModel modelHoy = modelosHoy.get(nombreCancha);
+                        DefaultTableModel modelSemana = modelosSemana.get(nombreCancha);
+                        DefaultTableModel modelPosteriores = modelosPosteriores.get(nombreCancha);
 
-                // Clasificar el agendamiento según la fecha
-                if (fechaAgendamiento.equals(hoy)) {
-                    modelHoy.addRow(row);
-                } else if (fechaAgendamiento.after(hoy) && fechaAgendamiento.before(finSemana)) {
-                    modelSemana.addRow(row);
-                } else if (fechaAgendamiento.after(hoy)) {
-                    modelPosteriores.addRow(row);
+                        // Clasificar el agendamiento según la fecha
+                        if (fechaAgendamiento.equals(hoy)) {
+                            modelHoy.addRow(row);
+                        } else if (fechaAgendamiento.after(hoy) && fechaAgendamiento.before(finSemana)) {
+                            modelSemana.addRow(row);
+                        } else if (fechaAgendamiento.after(hoy)) {
+                            modelPosteriores.addRow(row);
+                        }
+                    }
                 }
             }
 
             // Ajustar anchos de columna para todas las tablas
-            ajustarAnchoColumnas(tblHoy);
-            ajustarAnchoColumnas(tblSemana);
-            ajustarAnchoColumnas(tblPosteriores);
+            for (JTable tabla : tablasHoy.values()) {
+                ajustarAnchoColumnas(tabla);
+            }
+            for (JTable tabla : tablasSemana.values()) {
+                ajustarAnchoColumnas(tabla);
+            }
+            for (JTable tabla : tablasPosteriores.values()) {
+                ajustarAnchoColumnas(tabla);
+            }
 
             // Cargar datos del usuario actual
             String sqlUser = "SELECT nombre, rut, telefono FROM usuarios WHERE id = ?";
-            PreparedStatement pstmtUser = conn.prepareStatement(sqlUser);
-            pstmtUser.setInt(1, usuarioId);
-            ResultSet rsUser = pstmtUser.executeQuery();
-
-            if (rsUser.next()) {
-                txtNombre.setText(rsUser.getString("nombre"));
-                txtRut.setText(rsUser.getString("rut"));
-                txtTelefono.setText(rsUser.getString("telefono"));
+            try (PreparedStatement pstmtUser = conn.prepareStatement(sqlUser)) {
+                pstmtUser.setInt(1, usuarioId);
+                try (ResultSet rsUser = pstmtUser.executeQuery()) {
+                    if (rsUser.next()) {
+                        txtNombre.setText(rsUser.getString("nombre"));
+                        txtRut.setText(rsUser.getString("rut"));
+                        txtTelefono.setText(rsUser.getString("telefono"));
+                    }
+                }
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error al cargar agendamientos: " + ex.getMessage(),
@@ -428,15 +500,65 @@ public class AgendamientoFrame extends JFrame {
         }
     }
 
+    private void cargarAgendamientosPorCancha(Connection conn, String nombreCancha, 
+            DefaultTableModel modelHoy, DefaultTableModel modelSemana, DefaultTableModel modelPosteriores) 
+            throws SQLException {
+        
+        String sql = "SELECT a.*, u.nombre as nombre_usuario, u.rut, u.telefono " +
+                    "FROM agendamientos a " +
+                    "JOIN canchas c ON a.cancha_id = c.id " +
+                    "JOIN usuarios u ON a.usuario_id = u.id " +
+                    "WHERE a.usuario_id = ? AND c.nombre = ? " +
+                    "ORDER BY a.fecha, a.hora_inicio";
+                    
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, usuarioId);
+        pstmt.setString(2, nombreCancha);
+        ResultSet rs = pstmt.executeQuery();
+
+        // Obtener fecha actual
+        java.util.Date hoy = new java.util.Date();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(hoy);
+        cal.add(java.util.Calendar.DAY_OF_YEAR, 7);
+        java.util.Date finSemana = cal.getTime();
+
+        while (rs.next()) {
+            java.util.Date fechaAgendamiento = rs.getDate("fecha");
+            Object[] row = {
+                new java.text.SimpleDateFormat("dd").format(fechaAgendamiento),
+                new java.text.SimpleDateFormat("MMMM", new java.util.Locale("es", "ES")).format(fechaAgendamiento),
+                new java.text.SimpleDateFormat("yyyy").format(fechaAgendamiento),
+                rs.getTime("hora_inicio") + " - " + rs.getTime("hora_fin"),
+                rs.getString("nombre_usuario"),
+                rs.getString("rut"),
+                rs.getString("telefono")
+            };
+
+            // Clasificar el agendamiento según la fecha
+            if (fechaAgendamiento.equals(hoy)) {
+                modelHoy.addRow(row);
+            } else if (fechaAgendamiento.after(hoy) && fechaAgendamiento.before(finSemana)) {
+                modelSemana.addRow(row);
+            } else if (fechaAgendamiento.after(hoy)) {
+                modelPosteriores.addRow(row);
+            }
+        }
+    }
+
     private void ajustarAnchoColumnas(JTable tabla) {
         // Ajustar el ancho de las columnas según el contenido
-        int[] anchos = {150, 60, 120, 80, 120, 150, 100}; // Anchos personalizados para cada columna
+        int[] anchos = {60, 120, 80, 120, 150, 100, 100}; // Agregado ancho para la columna de teléfono
         for (int i = 0; i < tabla.getColumnCount(); i++) {
             tabla.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
         }
     }
 
     private JTable crearTablaPersonalizada(DefaultTableModel modelo) {
+        // Actualizar las columnas para incluir teléfono
+        String[] columnas = {"Día", "Mes", "Año", "Hora", "Nombre", "RUT", "Teléfono"};
+        modelo.setColumnIdentifiers(columnas);
+
         JTable tabla = new JTable(modelo);
         tabla.setFont(new Font("Arial", Font.PLAIN, 12));
         tabla.setRowHeight(30);
@@ -532,6 +654,16 @@ public class AgendamientoFrame extends JFrame {
             pstmt.executeUpdate();
 
             JOptionPane.showMessageDialog(this, "Agendamiento realizado exitosamente!");
+            
+            // Limpiar los campos después del agendamiento exitoso
+            txtNombre.setText("");
+            txtRut.setText("");
+            txtTelefono.setText("");
+            cmbHoraInicio.setSelectedIndex(0);
+            cmbHoraFin.setSelectedIndex(0);
+            calendar.setDate(new java.util.Date()); // Resetear la fecha al día actual
+            
+            // Recargar los agendamientos
             cargarAgendamientos();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error al realizar agendamiento: " + ex.getMessage(),
