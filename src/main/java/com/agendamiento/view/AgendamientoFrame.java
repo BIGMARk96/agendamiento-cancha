@@ -8,15 +8,18 @@ import java.sql.*;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
+import java.util.Calendar;
+import org.jdesktop.swingx.JXDatePicker;
+import org.jdesktop.swingx.calendar.SingleDaySelectionModel;
 import com.agendamiento.util.DatabaseConnection;
-import com.toedter.calendar.JCalendar;
 
 public class AgendamientoFrame extends JFrame {
     private int usuarioId;
     private JPanel canchasPanel;
     private JComboBox<LocalTime> cmbHoraInicio;
     private JComboBox<LocalTime> cmbHoraFin;
-    private JCalendar calendar;
+    private JXDatePicker datePicker;
     private JTextField txtNombre;
     private JTextField txtRut;
     private JTextField txtTelefono;
@@ -113,37 +116,36 @@ public class AgendamientoFrame extends JFrame {
         gbc.gridy = 3;
         centerPanel.add(lblFecha, gbc);
 
-        calendar = new JCalendar();
-        calendar.setPreferredSize(new Dimension(250, 200));
-        calendar.setFont(new Font("Arial", Font.PLAIN, 12));
-        calendar.setLocale(new java.util.Locale("es", "ES"));
-        calendar.setBackground(Color.WHITE);
-        calendar.setForeground(Color.BLACK);
-        calendar.getDayChooser().setDecorationBackgroundColor(new Color(240, 240, 240));
-        calendar.getDayChooser().setDecorationBackgroundVisible(true);
-        calendar.getDayChooser().setDayBordersVisible(true);
-        calendar.getDayChooser().setWeekOfYearVisible(false);
-        calendar.getDayChooser().setWeekdayForeground(Color.BLACK);
-        calendar.getDayChooser().setSundayForeground(new Color(255, 0, 0));
-        calendar.getMonthChooser().setBackground(Color.WHITE);
-        calendar.getYearChooser().setBackground(Color.WHITE);
+        // Crear y configurar el JXDatePicker
+        datePicker = new JXDatePicker();
+        datePicker.setDate(Calendar.getInstance().getTime());
+        datePicker.setFormats(new java.text.SimpleDateFormat("dd/MM/yyyy"));
         
-        // Configurar el color de selección usando el panel del día
-        JPanel dayChooserPanel = calendar.getDayChooser();
-        for (Component comp : dayChooserPanel.getComponents()) {
-            if (comp instanceof JPanel) {
-                JPanel panel = (JPanel) comp;
-                for (Component button : panel.getComponents()) {
-                    if (button instanceof JButton) {
-                        button.setBackground(new Color(255, 0, 0));
-                        button.setForeground(Color.WHITE);
-                    }
-                }
-            }
-        }
+        // Configurar el selector de fechas
+        datePicker.getMonthView().setSelectionModel(new SingleDaySelectionModel());
+        datePicker.getMonthView().setTodayBackground(new Color(255, 220, 220));
+        datePicker.getMonthView().setMonthStringBackground(new Color(200, 200, 255));
+        datePicker.getMonthView().setDayForeground(Calendar.SUNDAY, Color.RED);
+        datePicker.getMonthView().setDayForeground(Calendar.SATURDAY, Color.RED);
+        datePicker.getMonthView().setSelectionBackground(new Color(220, 0, 0));
+        datePicker.getMonthView().setSelectionForeground(Color.WHITE);
+        datePicker.getMonthView().setTodayBackground(new Color(255, 220, 220));
+        datePicker.getMonthView().setPreferredColumnCount(2);
+        datePicker.getMonthView().setTraversable(true);
+        datePicker.getMonthView().setShowingLeadingDays(true);
+        datePicker.getMonthView().setShowingTrailingDays(true);
+        datePicker.setPreferredSize(new Dimension(150, 30));
+        
+        // Establecer fecha mínima como hoy
+        datePicker.getMonthView().setLowerBound(Calendar.getInstance().getTime());
+        
+        // Establecer el estilo del editor de fecha
+        datePicker.getEditor().setFont(new Font("Arial", Font.PLAIN, 14));
+        datePicker.getEditor().setBackground(Color.WHITE);
+        datePicker.getEditor().setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
         
         gbc.gridx = 1;
-        centerPanel.add(calendar, gbc);
+        centerPanel.add(datePicker, gbc);
 
         // Hora inicio
         JLabel lblHoraInicio = new JLabel("Hora Inicio:");
@@ -599,6 +601,20 @@ public class AgendamientoFrame extends JFrame {
             return;
         }
 
+        Date fechaSeleccionada = datePicker.getDate();
+        if (fechaSeleccionada == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar una fecha",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validar que la fecha no sea anterior a hoy
+        if (fechaSeleccionada.before(new Date())) {
+            JOptionPane.showMessageDialog(this, "La fecha seleccionada no puede ser anterior a hoy",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         String[] partes = canchaSeleccionada.split(" - ");
         String nombreCancha = partes[0];
         String tipoCancha = partes[1];
@@ -608,13 +624,6 @@ public class AgendamientoFrame extends JFrame {
 
         if (horaInicio == null || horaFin == null) {
             JOptionPane.showMessageDialog(this, "Debe seleccionar hora de inicio y fin",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Validar que la hora fin sea posterior a la hora inicio
-        if (horaFin.isBefore(horaInicio) || horaFin.equals(horaInicio)) {
-            JOptionPane.showMessageDialog(this, "La hora de fin debe ser posterior a la hora de inicio",
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -641,13 +650,13 @@ public class AgendamientoFrame extends JFrame {
             pstmtUser.setInt(4, usuarioId);
             pstmtUser.executeUpdate();
 
-            // Insertar agendamiento
+            // Insertar agendamiento usando la fecha del datePicker
             String sql = "INSERT INTO agendamientos (usuario_id, cancha_id, fecha, hora_inicio, hora_fin) " +
                         "VALUES (?, ?, ?, ?, ?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, usuarioId);
             pstmt.setInt(2, canchaId);
-            pstmt.setDate(3, new java.sql.Date(calendar.getDate().getTime()));
+            pstmt.setDate(3, new java.sql.Date(datePicker.getDate().getTime()));
             pstmt.setTime(4, Time.valueOf(horaInicio));
             pstmt.setTime(5, Time.valueOf(horaFin));
             
@@ -661,7 +670,7 @@ public class AgendamientoFrame extends JFrame {
             txtTelefono.setText("");
             cmbHoraInicio.setSelectedIndex(0);
             cmbHoraFin.setSelectedIndex(0);
-            calendar.setDate(new java.util.Date()); // Resetear la fecha al día actual
+            datePicker.setDate(Calendar.getInstance().getTime()); // Resetear la fecha al día actual
             
             // Recargar los agendamientos
             cargarAgendamientos();
