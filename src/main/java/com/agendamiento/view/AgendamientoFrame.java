@@ -484,18 +484,13 @@ public class AgendamientoFrame extends JFrame {
                 ajustarAnchoColumnas(tabla);
             }
 
-            // Cargar datos del usuario actual
-            String sqlUser = "SELECT nombre, rut, telefono FROM usuarios WHERE id = ?";
-            try (PreparedStatement pstmtUser = conn.prepareStatement(sqlUser)) {
-                pstmtUser.setInt(1, usuarioId);
-                try (ResultSet rsUser = pstmtUser.executeQuery()) {
-                    if (rsUser.next()) {
-                        txtNombre.setText(rsUser.getString("nombre"));
-                        txtRut.setText(rsUser.getString("rut"));
-                        txtTelefono.setText(rsUser.getString("telefono"));
-                    }
-                }
-            }
+            // Inicializar campos vacíos
+            txtNombre.setText("");
+            txtRut.setText("");
+            txtTelefono.setText("");
+            cmbHoraInicio.setSelectedIndex(0);
+            cmbHoraFin.setSelectedIndex(0);
+            datePicker.setDate(Calendar.getInstance().getTime());
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Error al cargar agendamientos: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
