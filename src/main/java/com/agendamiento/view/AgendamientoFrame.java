@@ -333,54 +333,64 @@ public class AgendamientoFrame extends JFrame {
         canchasPanel.removeAll();
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT nombre, tipo FROM canchas";
+            // Modificar la consulta SQL para evitar duplicados
+            String sql = "SELECT DISTINCT nombre, tipo FROM canchas ORDER BY nombre";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
+
+            // Crear un Set para rastrear las canchas ya procesadas
+            java.util.Set<String> canchasProcesadas = new java.util.HashSet<>();
 
             while (rs.next()) {
                 String nombre = rs.getString("nombre");
                 String tipo = rs.getString("tipo");
+                String claveCancha = nombre + "|" + tipo;
                 
-                JPanel canchaPanel = new JPanel(new BorderLayout(5, 5));
-                canchaPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                canchaPanel.setBackground(Color.WHITE);
-                canchaPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                
-                // Etiqueta con imagen
-                JLabel lblImagen = new JLabel(imagenesCanchas.get(tipo.toLowerCase()));
-                lblImagen.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                
-                // Panel de información
-                JPanel infoPanel = new JPanel(new GridLayout(2, 1));
-                infoPanel.setBackground(Color.WHITE);
-                JLabel lblNombre = new JLabel(nombre);
-                JLabel lblTipo = new JLabel(tipo);
-                lblNombre.setFont(new Font("Arial", Font.BOLD, 14));
-                lblTipo.setFont(new Font("Arial", Font.PLAIN, 12));
-                lblNombre.setHorizontalAlignment(JLabel.CENTER);
-                lblTipo.setHorizontalAlignment(JLabel.CENTER);
-                infoPanel.add(lblNombre);
-                infoPanel.add(lblTipo);
-                
-                canchaPanel.add(lblImagen, BorderLayout.CENTER);
-                canchaPanel.add(infoPanel, BorderLayout.SOUTH);
-                
-                // Hacer el panel seleccionable
-                canchaPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-                    public void mouseClicked(java.awt.event.MouseEvent evt) {
-                        seleccionarCancha(nombre + " - " + tipo);
-                        // Actualizar bordes de todos los paneles
-                        for (Component c : canchasPanel.getComponents()) {
-                            if (c instanceof JPanel) {
-                                ((JPanel) c).setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                // Solo procesar si no hemos visto esta combinación antes
+                if (!canchasProcesadas.contains(claveCancha)) {
+                    canchasProcesadas.add(claveCancha);
+                    
+                    JPanel canchaPanel = new JPanel(new BorderLayout(5, 5));
+                    canchaPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                    canchaPanel.setBackground(Color.WHITE);
+                    canchaPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    
+                    // Etiqueta con imagen
+                    JLabel lblImagen = new JLabel(imagenesCanchas.get(tipo.toLowerCase()));
+                    lblImagen.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                    
+                    // Panel de información
+                    JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+                    infoPanel.setBackground(Color.WHITE);
+                    JLabel lblNombre = new JLabel(nombre);
+                    JLabel lblTipo = new JLabel(tipo);
+                    lblNombre.setFont(new Font("Arial", Font.BOLD, 14));
+                    lblTipo.setFont(new Font("Arial", Font.PLAIN, 12));
+                    lblNombre.setHorizontalAlignment(JLabel.CENTER);
+                    lblTipo.setHorizontalAlignment(JLabel.CENTER);
+                    infoPanel.add(lblNombre);
+                    infoPanel.add(lblTipo);
+                    
+                    canchaPanel.add(lblImagen, BorderLayout.CENTER);
+                    canchaPanel.add(infoPanel, BorderLayout.SOUTH);
+                    
+                    // Hacer el panel seleccionable
+                    canchaPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+                        public void mouseClicked(java.awt.event.MouseEvent evt) {
+                            seleccionarCancha(nombre + " - " + tipo);
+                            // Actualizar bordes de todos los paneles
+                            for (Component c : canchasPanel.getComponents()) {
+                                if (c instanceof JPanel) {
+                                    ((JPanel) c).setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                                }
                             }
+                            // Resaltar el panel seleccionado con borde rojo
+                            canchaPanel.setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0), 2));
                         }
-                        // Resaltar el panel seleccionado con borde rojo
-                        canchaPanel.setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0), 2));
-                    }
-                });
-                
-                canchasPanel.add(canchaPanel);
+                    });
+                    
+                    canchasPanel.add(canchaPanel);
+                }
             }
             
             canchasPanel.revalidate();
