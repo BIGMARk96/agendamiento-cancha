@@ -13,6 +13,7 @@ public class LoginFrame extends JFrame {
     private JPasswordField txtPassword;
     private JButton btnLogin;
     private JButton btnRegistro;
+    private JButton btnRestaurar;
 
     public LoginFrame() {
         setTitle("Login - Sistema de Agendamiento");
@@ -58,8 +59,10 @@ public class LoginFrame extends JFrame {
         JPanel buttonPanel = new JPanel();
         btnLogin = new JButton("Iniciar sesion");
         btnRegistro = new JButton("registrarse");
+        btnRestaurar = new JButton("Restaurar Contraseña");
         buttonPanel.add(btnLogin);
         buttonPanel.add(btnRegistro);
+        buttonPanel.add(btnRestaurar);
 
         gbc.gridx = 0;
         gbc.gridy = 3;
@@ -70,6 +73,7 @@ public class LoginFrame extends JFrame {
         // eventos
         btnLogin.addActionListener(e -> login());
         btnRegistro.addActionListener(e -> abrirRegistro());
+        btnRestaurar.addActionListener(e -> abrirRestaurarPassword());
 
         add(mainPanel);
     }
@@ -120,6 +124,10 @@ public class LoginFrame extends JFrame {
 
     private void abrirRegistro() {
         new RegistroFrame().setVisible(true);
+    }
+
+    private void abrirRestaurarPassword() {
+        new RestaurarPasswordFrame().setVisible(true);
     }
 
     public static void main(String[] args) {
