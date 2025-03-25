@@ -12,7 +12,7 @@ public class DatabaseConnection {
 
     public static Connection getConnection() throws SQLException {
         try {
-            // Cargar el driver explícitamente
+            // cargar el driver explícitamente
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Intentar la conexión con timeout
@@ -22,12 +22,12 @@ public class DatabaseConnection {
                 "peteto10"
             );
             
-            // Desactivar el modo seguro
+            // desactivar el modo seguro
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("SET SQL_SAFE_UPDATES = 0");
             }
             
-            // Verificar la conexión
+            // verificar la conexion
             if (conn == null || conn.isClosed()) {
                 throw new SQLException("No se pudo establecer la conexión con la base de datos");
             }
