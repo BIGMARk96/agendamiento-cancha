@@ -366,7 +366,7 @@ public class AgendamientoFrame extends JFrame {
                     canchasProcesadas.add(claveCancha);
                     
                     JPanel canchaPanel = new JPanel(new BorderLayout(5, 5));
-                    canchaPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                    canchaPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
                     canchaPanel.setBackground(Color.WHITE);
                     canchaPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     
@@ -374,33 +374,62 @@ public class AgendamientoFrame extends JFrame {
                     JLabel lblImagen = new JLabel(imagenesCanchas.get(tipo.toLowerCase()));
                     lblImagen.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
                     
-                    // Panel de información
-                    JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+                    // Panel de información con GridLayout para mejor espaciado
+                    JPanel infoPanel = new JPanel(new GridLayout(2, 1, 5, 5));
                     infoPanel.setBackground(Color.WHITE);
+                    
+                    // Nombre de la cancha con fuente más grande
                     JLabel lblNombre = new JLabel(nombre);
-                    JLabel lblTipo = new JLabel(tipo);
-                    lblNombre.setFont(new Font("Arial", Font.BOLD, 14));
-                    lblTipo.setFont(new Font("Arial", Font.PLAIN, 12));
+                    lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Aumentado de 14 a 18
                     lblNombre.setHorizontalAlignment(JLabel.CENTER);
+                    
+                    // Tipo de cancha también con fuente más grande
+                    JLabel lblTipo = new JLabel(tipo);
+                    lblTipo.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Aumentado de 12 a 16
                     lblTipo.setHorizontalAlignment(JLabel.CENTER);
+                    
                     infoPanel.add(lblNombre);
                     infoPanel.add(lblTipo);
+                    infoPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8)); // Añadir padding
                     
                     canchaPanel.add(lblImagen, BorderLayout.CENTER);
                     canchaPanel.add(infoPanel, BorderLayout.SOUTH);
                     
-                    // Hacer el panel seleccionable
+                    // Hacer el panel seleccionable con efectos visuales mejorados
                     canchaPanel.addMouseListener(new java.awt.event.MouseAdapter() {
                         public void mouseClicked(java.awt.event.MouseEvent evt) {
                             seleccionarCancha(nombre + " - " + tipo);
                             // Actualizar bordes de todos los paneles
                             for (Component c : canchasPanel.getComponents()) {
                                 if (c instanceof JPanel) {
-                                    ((JPanel) c).setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                                    JPanel panel = (JPanel) c;
+                                    panel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+                                    panel.setBackground(Color.WHITE);
+                                    // Resetear el tamaño de fuente de las etiquetas
+                                    Component[] components = ((JPanel)panel.getComponent(1)).getComponents();
+                                    ((JLabel)components[0]).setFont(new Font("Segoe UI", Font.BOLD, 18));
+                                    ((JLabel)components[1]).setFont(new Font("Segoe UI", Font.PLAIN, 16));
                                 }
                             }
-                            // Resaltar el panel seleccionado con borde rojo
-                            canchaPanel.setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0), 2));
+                            // Resaltar el panel seleccionado
+                            canchaPanel.setBorder(BorderFactory.createLineBorder(new Color(51, 153, 255), 3));
+                            canchaPanel.setBackground(new Color(242, 247, 255));
+                            // Aumentar el tamaño de la fuente cuando está seleccionado
+                            Component[] components = infoPanel.getComponents();
+                            ((JLabel)components[0]).setFont(new Font("Segoe UI", Font.BOLD, 20));
+                            ((JLabel)components[1]).setFont(new Font("Segoe UI", Font.PLAIN, 18));
+                        }
+                        
+                        public void mouseEntered(java.awt.event.MouseEvent evt) {
+                            if (!canchaPanel.getBackground().equals(new Color(242, 247, 255))) {
+                                canchaPanel.setBackground(new Color(250, 250, 250));
+                            }
+                        }
+                        
+                        public void mouseExited(java.awt.event.MouseEvent evt) {
+                            if (!canchaPanel.getBorder().equals(BorderFactory.createLineBorder(new Color(51, 153, 255), 3))) {
+                                canchaPanel.setBackground(Color.WHITE);
+                            }
                         }
                     });
                     
