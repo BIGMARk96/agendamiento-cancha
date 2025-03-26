@@ -18,8 +18,16 @@ public class RestaurarPasswordFrame extends JFrame {
     public RestaurarPasswordFrame() {
         setTitle("Restaurar Contraseña");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(500, 450);
+        setSize(650, 500);
         setLocationRelativeTo(null);
+
+        // Configurar ToolTipManager para mejor visualización
+        ToolTipManager.sharedInstance().setInitialDelay(0);
+        ToolTipManager.sharedInstance().setDismissDelay(15000);
+        ToolTipManager.sharedInstance().setReshowDelay(0);
+        UIManager.put("ToolTip.background", new Color(255, 255, 225));
+        UIManager.put("ToolTip.foreground", Color.BLACK);
+        UIManager.put("ToolTip.font", new Font("Segoe UI", Font.PLAIN, 14));
 
         // Panel principal
         JPanel mainPanel = new JPanel();
@@ -45,23 +53,27 @@ public class RestaurarPasswordFrame extends JFrame {
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 16);
         Dimension fieldSize = new Dimension(250, 40);
         
+        // Definir los mensajes de ayuda para las contraseñas
+        String helpNuevaPassword = "Mínimo 6 caracteres y debe incluir al menos un número";
+        String helpConfirmarPassword = "Debe coincidir con la nueva contraseña";
+        
         // Usuario
         gbc.gridwidth = 1;
         gbc.insets = new Insets(10, 10, 10, 10);
         addStyledField(mainPanel, gbc, 1, "Usuario:", txtUsuario = new JTextField(20),
-                      labelFont, fieldFont, fieldSize);
+                      labelFont, fieldFont, fieldSize, null);
         
         // RUT
         addStyledField(mainPanel, gbc, 2, "RUT:", txtRut = new JTextField(20),
-                      labelFont, fieldFont, fieldSize);
+                      labelFont, fieldFont, fieldSize, null);
         
         // Nueva contraseña
         addStyledField(mainPanel, gbc, 3, "Nueva Contraseña:", txtNuevaPassword = new JPasswordField(20),
-                      labelFont, fieldFont, fieldSize);
+                      labelFont, fieldFont, fieldSize, helpNuevaPassword);
         
         // Confirmar contraseña
         addStyledField(mainPanel, gbc, 4, "Confirmar Contraseña:", txtConfirmarPassword = new JPasswordField(20),
-                      labelFont, fieldFont, fieldSize);
+                      labelFont, fieldFont, fieldSize, helpConfirmarPassword);
 
         // Panel de botones
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
@@ -114,18 +126,57 @@ public class RestaurarPasswordFrame extends JFrame {
     }
 
     private void addStyledField(JPanel panel, GridBagConstraints gbc, int row, String labelText, 
-                              JComponent field, Font labelFont, Font fieldFont, Dimension fieldSize) {
+                              JComponent field, Font labelFont, Font fieldFont, Dimension fieldSize,
+                              String helpText) {
+        // Etiqueta
+        JLabel label = new JLabel(labelText);
+        label.setFont(labelFont);
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.gridwidth = 1;
-        JLabel label = new JLabel(labelText);
-        label.setFont(labelFont);
+        gbc.anchor = GridBagConstraints.EAST;
         panel.add(label, gbc);
 
+        // Campo de texto
         gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
         field.setFont(fieldFont);
         field.setPreferredSize(fieldSize);
         panel.add(field, gbc);
+
+        // Icono de ayuda (solo para campos de contraseña)
+        if (helpText != null) {
+            JLabel helpIcon = new JLabel("?") {
+                @Override
+                public JToolTip createToolTip() {
+                    JToolTip tip = super.createToolTip();
+                    tip.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                    tip.setBackground(new Color(255, 255, 225));
+                    tip.setForeground(Color.BLACK);
+                    tip.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(51, 153, 255)),
+                        BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                    ));
+                    return tip;
+                }
+            };
+            
+            helpIcon.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            helpIcon.setForeground(new Color(51, 153, 255));
+            helpIcon.setPreferredSize(new Dimension(25, 25));
+            helpIcon.setHorizontalAlignment(SwingConstants.CENTER);
+            helpIcon.setToolTipText("<html><p style='width: 250px'>" + helpText + "</p></html>");
+            helpIcon.setBorder(BorderFactory.createLineBorder(new Color(51, 153, 255), 1, true));
+            helpIcon.setOpaque(true);
+            helpIcon.setBackground(Color.WHITE);
+            helpIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            gbc.gridx = 2;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.insets = new Insets(10, 5, 10, 10);
+            panel.add(helpIcon, gbc);
+            gbc.insets = new Insets(10, 10, 10, 10); // Restaurar insets originales
+        }
     }
 
     private void restaurarPassword() {
@@ -137,6 +188,13 @@ public class RestaurarPasswordFrame extends JFrame {
         // Validaciones
         if (usuario.isEmpty() || rut.isEmpty() || nuevaPassword.isEmpty() || confirmarPassword.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios",
+                    "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validar nueva contraseña
+        if (nuevaPassword.length() < 6 || !nuevaPassword.matches(".*\\d.*")) {
+            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 6 caracteres y contener al menos un número",
                     "Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
