@@ -19,60 +19,117 @@ public class RegistroFrame extends JFrame {
     public RegistroFrame() {
         setTitle("Registro de Usuario");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(400, 400);
+        setSize(500, 500);
         setLocationRelativeTo(null);
 
         // Panel principal
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout());
+        mainPanel.setBackground(new Color(240, 240, 240));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Campos
-        int row = 0;
+        // Título
+        JLabel lblTitulo = new JLabel("Registro de Usuario");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitulo.setForeground(new Color(51, 51, 51));
+        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(30, 10, 30, 10);
+        mainPanel.add(lblTitulo, gbc);
+
+        // Estilo común para campos
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 16);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 16);
+        Dimension fieldSize = new Dimension(250, 40);
         
         // Usuario
-        addField(mainPanel, gbc, row++, "Usuario:", txtUsuario = new JTextField(20));
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        addStyledField(mainPanel, gbc, 1, "Usuario:", txtUsuario = new JTextField(20), 
+                      labelFont, fieldFont, fieldSize);
         
         // Contraseña
-        addField(mainPanel, gbc, row++, "Contraseña:", txtPassword = new JPasswordField(20));
+        addStyledField(mainPanel, gbc, 2, "Contraseña:", txtPassword = new JPasswordField(20),
+                      labelFont, fieldFont, fieldSize);
         
         // Nombre
-        addField(mainPanel, gbc, row++, "Nombre:", txtNombre = new JTextField(20));
+        addStyledField(mainPanel, gbc, 3, "Nombre:", txtNombre = new JTextField(20),
+                      labelFont, fieldFont, fieldSize);
         
         // RUT
-        addField(mainPanel, gbc, row++, "RUT:", txtRut = new JTextField(20));
+        addStyledField(mainPanel, gbc, 4, "RUT:", txtRut = new JTextField(20),
+                      labelFont, fieldFont, fieldSize);
         
         // Teléfono
-        addField(mainPanel, gbc, row++, "Teléfono:", txtTelefono = new JTextField(20));
+        addStyledField(mainPanel, gbc, 5, "Teléfono:", txtTelefono = new JTextField(20),
+                      labelFont, fieldFont, fieldSize);
 
         // Panel de botones
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        buttonPanel.setBackground(new Color(240, 240, 240));
+        
+        // Estilo común para botones
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
+        Dimension buttonSize = new Dimension(180, 40);
+
+        // Botón Registrar
         btnRegistrar = new JButton("Registrar");
+        btnRegistrar.setFont(buttonFont);
+        btnRegistrar.setPreferredSize(buttonSize);
+        btnRegistrar.setBackground(new Color(46, 204, 113));
+        btnRegistrar.setForeground(Color.WHITE);
+        btnRegistrar.setFocusPainted(false);
+        btnRegistrar.setBorderPainted(false);
+        btnRegistrar.setOpaque(true);
+        btnRegistrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Botón Cancelar
         btnCancelar = new JButton("Cancelar");
+        btnCancelar.setFont(buttonFont);
+        btnCancelar.setPreferredSize(buttonSize);
+        btnCancelar.setBackground(new Color(231, 76, 60));
+        btnCancelar.setForeground(Color.WHITE);
+        btnCancelar.setFocusPainted(false);
+        btnCancelar.setBorderPainted(false);
+        btnCancelar.setOpaque(true);
+        btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         buttonPanel.add(btnRegistrar);
         buttonPanel.add(btnCancelar);
 
         gbc.gridx = 0;
-        gbc.gridy = row;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
+        gbc.insets = new Insets(30, 10, 20, 10);
         mainPanel.add(buttonPanel, gbc);
 
         // Eventos
         btnRegistrar.addActionListener(e -> registrar());
         btnCancelar.addActionListener(e -> dispose());
 
-        add(mainPanel);
+        // Añadir panel principal con borde
+        JPanel containerPanel = new JPanel(new BorderLayout());
+        containerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        containerPanel.add(mainPanel, BorderLayout.CENTER);
+        add(containerPanel);
     }
 
-    private void addField(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
+    private void addStyledField(JPanel panel, GridBagConstraints gbc, int row, String labelText, 
+                              JComponent field, Font labelFont, Font fieldFont, Dimension fieldSize) {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.gridwidth = 1;
-        panel.add(new JLabel(label), gbc);
+        JLabel label = new JLabel(labelText);
+        label.setFont(labelFont);
+        panel.add(label, gbc);
 
         gbc.gridx = 1;
+        field.setFont(fieldFont);
+        field.setPreferredSize(fieldSize);
         panel.add(field, gbc);
     }
 
