@@ -833,8 +833,23 @@ public class AgendamientoFrame extends JFrame {
             return;
         }
 
-        // Validar que la fecha no sea anterior a hoy
-        if (fechaSeleccionada.before(new Date())) {
+        // Nueva validación de fecha que solo compara el día, mes y año
+        Calendar calHoy = Calendar.getInstance();
+        Calendar calSeleccionada = Calendar.getInstance();
+        calSeleccionada.setTime(fechaSeleccionada);
+        
+        // Resetear las horas, minutos, segundos y milisegundos para ambas fechas
+        calHoy.set(Calendar.HOUR_OF_DAY, 0);
+        calHoy.set(Calendar.MINUTE, 0);
+        calHoy.set(Calendar.SECOND, 0);
+        calHoy.set(Calendar.MILLISECOND, 0);
+        
+        calSeleccionada.set(Calendar.HOUR_OF_DAY, 0);
+        calSeleccionada.set(Calendar.MINUTE, 0);
+        calSeleccionada.set(Calendar.SECOND, 0);
+        calSeleccionada.set(Calendar.MILLISECOND, 0);
+        
+        if (calSeleccionada.before(calHoy)) {
             JOptionPane.showMessageDialog(this, "La fecha seleccionada no puede ser anterior a hoy",
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
