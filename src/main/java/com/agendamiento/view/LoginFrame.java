@@ -21,14 +21,14 @@ public class LoginFrame extends JFrame {
         setSize(500, 400);
         setLocationRelativeTo(null);
 
-        // Panel principal
+        // panel principal
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout());
         mainPanel.setBackground(new Color(240, 240, 240));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
-        // Título
+        // ttulo
         JLabel lblTitulo = new JLabel("Bienvenido a las canchas de joselito");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitulo.setForeground(new Color(51, 51, 51));
@@ -38,7 +38,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(30, 10, 30, 10);
         mainPanel.add(lblTitulo, gbc);
 
-        // Usuario
+        // usuario
         gbc.gridwidth = 1;
         gbc.gridy = 1;
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -52,7 +52,7 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 1;
         mainPanel.add(txtUsuario, gbc);
 
-        // Contraseña
+        // contraseña
         gbc.gridx = 0;
         gbc.gridy = 2;
         JLabel lblPassword = new JLabel("Contraseña:");
@@ -65,15 +65,15 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 1;
         mainPanel.add(txtPassword, gbc);
 
-        // Panel de botones
+        // panel de botones
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setBackground(new Color(240, 240, 240));
         
-        // Estilo común para botones
+        // estilobotones
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
         Dimension buttonSize = new Dimension(180, 40);
         
-        // Botón Login
+        // bton Login
         btnLogin = new JButton("Iniciar sesión");
         btnLogin.setFont(buttonFont);
         btnLogin.setPreferredSize(buttonSize);
@@ -84,7 +84,7 @@ public class LoginFrame extends JFrame {
         btnLogin.setOpaque(true);
         btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // Botón Registro
+        // bot registro
         btnRegistro = new JButton("Registrarse");
         btnRegistro.setFont(buttonFont);
         btnRegistro.setPreferredSize(buttonSize);
@@ -95,7 +95,7 @@ public class LoginFrame extends JFrame {
         btnRegistro.setOpaque(true);
         btnRegistro.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // Botón Restaurar
+        // botn restaurar
         btnRestaurar = new JButton("Restaurar Contraseña");
         btnRestaurar.setFont(buttonFont);
         btnRestaurar.setPreferredSize(new Dimension(200, 35));
@@ -114,17 +114,17 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(30, 10, 15, 10);
         mainPanel.add(buttonPanel, gbc);
 
-        // Añadir botón restaurar en una nueva fila
+        // boton restaurar
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 10, 20, 10);
         mainPanel.add(btnRestaurar, gbc);
 
-        // Eventos
+        // eventos
         btnLogin.addActionListener(e -> login());
         btnRegistro.addActionListener(e -> abrirRegistro());
         btnRestaurar.addActionListener(e -> abrirRestaurarPassword());
 
-        // Añadir panel principal con borde
+        //  borde panel principal
         JPanel containerPanel = new JPanel(new BorderLayout());
         containerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         containerPanel.add(mainPanel, BorderLayout.CENTER);

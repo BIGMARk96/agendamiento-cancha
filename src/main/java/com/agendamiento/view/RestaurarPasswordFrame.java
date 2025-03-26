@@ -21,7 +21,7 @@ public class RestaurarPasswordFrame extends JFrame {
         setSize(650, 500);
         setLocationRelativeTo(null);
 
-        // Configurar ToolTipManager para mejor visualización
+        // toolti para mostrar ayuda de validaciones
         ToolTipManager.sharedInstance().setInitialDelay(0);
         ToolTipManager.sharedInstance().setDismissDelay(15000);
         ToolTipManager.sharedInstance().setReshowDelay(0);
@@ -29,7 +29,7 @@ public class RestaurarPasswordFrame extends JFrame {
         UIManager.put("ToolTip.foreground", Color.BLACK);
         UIManager.put("ToolTip.font", new Font("Segoe UI", Font.PLAIN, 14));
 
-        // Panel principal
+        // panel principal
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout());
         mainPanel.setBackground(new Color(240, 240, 240));
@@ -37,7 +37,7 @@ public class RestaurarPasswordFrame extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Título
+        // titulo
         JLabel lblTitulo = new JLabel("Restaurar Contraseña");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitulo.setForeground(new Color(51, 51, 51));
@@ -48,42 +48,42 @@ public class RestaurarPasswordFrame extends JFrame {
         gbc.insets = new Insets(30, 10, 30, 10);
         mainPanel.add(lblTitulo, gbc);
 
-        // Estilo común para campos
+        // estilo para campos
         Font labelFont = new Font("Segoe UI", Font.BOLD, 16);
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 16);
         Dimension fieldSize = new Dimension(250, 40);
         
-        // Definir los mensajes de ayuda para las contraseñas
+        // mensaje ayuda para las validaciones
         String helpNuevaPassword = "Mínimo 6 caracteres y debe incluir al menos un número";
         String helpConfirmarPassword = "Debe coincidir con la nueva contraseña";
         
-        // Usuario
+        // usuario
         gbc.gridwidth = 1;
         gbc.insets = new Insets(10, 10, 10, 10);
         addStyledField(mainPanel, gbc, 1, "Usuario:", txtUsuario = new JTextField(20),
                       labelFont, fieldFont, fieldSize, null);
         
-        // RUT
+        // grita tu rut
         addStyledField(mainPanel, gbc, 2, "RUT:", txtRut = new JTextField(20),
                       labelFont, fieldFont, fieldSize, null);
         
-        // Nueva contraseña
+        // nueva contraseña
         addStyledField(mainPanel, gbc, 3, "Nueva Contraseña:", txtNuevaPassword = new JPasswordField(20),
                       labelFont, fieldFont, fieldSize, helpNuevaPassword);
         
-        // Confirmar contraseña
+        // confirmar contraseña
         addStyledField(mainPanel, gbc, 4, "Confirmar Contraseña:", txtConfirmarPassword = new JPasswordField(20),
                       labelFont, fieldFont, fieldSize, helpConfirmarPassword);
 
-        // Panel de botones
+        // panel de botones
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setBackground(new Color(240, 240, 240));
         
-        // Estilo común para botones
+        // estilo  botones
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
         Dimension buttonSize = new Dimension(180, 40);
 
-        // Botón Restaurar
+        // bton restaurar
         btnRestaurar = new JButton("Restaurar");
         btnRestaurar.setFont(buttonFont);
         btnRestaurar.setPreferredSize(buttonSize);
@@ -94,7 +94,7 @@ public class RestaurarPasswordFrame extends JFrame {
         btnRestaurar.setOpaque(true);
         btnRestaurar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Botón Cancelar
+        // bton cancelar
         btnCancelar = new JButton("Cancelar");
         btnCancelar.setFont(buttonFont);
         btnCancelar.setPreferredSize(buttonSize);
@@ -114,7 +114,7 @@ public class RestaurarPasswordFrame extends JFrame {
         gbc.insets = new Insets(30, 10, 20, 10);
         mainPanel.add(buttonPanel, gbc);
 
-        // Eventos
+        // eventos
         btnRestaurar.addActionListener(e -> restaurarPassword());
         btnCancelar.addActionListener(e -> dispose());
 
@@ -137,14 +137,14 @@ public class RestaurarPasswordFrame extends JFrame {
         gbc.anchor = GridBagConstraints.EAST;
         panel.add(label, gbc);
 
-        // Campo de texto
+        // campo de texto
         gbc.gridx = 1;
         gbc.anchor = GridBagConstraints.WEST;
         field.setFont(fieldFont);
         field.setPreferredSize(fieldSize);
         panel.add(field, gbc);
 
-        // Icono de ayuda (solo para campos de contraseña)
+        // icono ayuda para validaciones
         if (helpText != null) {
             JLabel helpIcon = new JLabel("?") {
                 @Override
@@ -185,14 +185,14 @@ public class RestaurarPasswordFrame extends JFrame {
         String nuevaPassword = new String(txtNuevaPassword.getPassword());
         String confirmarPassword = new String(txtConfirmarPassword.getPassword());
 
-        // Validaciones
+        // validaciones
         if (usuario.isEmpty() || rut.isEmpty() || nuevaPassword.isEmpty() || confirmarPassword.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios",
                     "Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Validar nueva contraseña
+        // validar nueva contraseña
         if (nuevaPassword.length() < 6 || !nuevaPassword.matches(".*\\d.*")) {
             JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 6 caracteres y contener al menos un número",
                     "Error", JOptionPane.WARNING_MESSAGE);
@@ -206,7 +206,7 @@ public class RestaurarPasswordFrame extends JFrame {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Verificar si existe el usuario con el RUT proporcionado
+            // verificar si existe el usuario con el RUT proporcionado
             String sqlCheck = "SELECT id FROM usuarios WHERE usuario = ? AND rut = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sqlCheck)) {
                 pstmt.setString(1, usuario);
