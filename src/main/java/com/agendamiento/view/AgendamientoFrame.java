@@ -65,14 +65,14 @@ public class AgendamientoFrame extends JFrame {
         // panel central datos del que solicita agerandamtno
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(51, 153, 255), 2), "Detalles de Agendamiento"));
-        centerPanel.setPreferredSize(new Dimension(250, 0));
+        centerPanel.setPreferredSize(new Dimension(300, 0));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(3, 3, 3, 3);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // datos del asolicitante
-        Font labelFont = new Font("Arial", Font.PLAIN, 12);
-        Font fieldFont = new Font("Arial", Font.PLAIN, 12);
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 14);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
 
         // nombre
         JLabel lblNombre = new JLabel("Nombre:");
@@ -81,8 +81,9 @@ public class AgendamientoFrame extends JFrame {
         gbc.gridy = 0;
         centerPanel.add(lblNombre, gbc);
         
-        txtNombre = new JTextField(15);
+        txtNombre = new JTextField(20);
         txtNombre.setFont(fieldFont);
+        txtNombre.setPreferredSize(new Dimension(200, 35));
         gbc.gridx = 1;
         centerPanel.add(txtNombre, gbc);
 
@@ -93,8 +94,9 @@ public class AgendamientoFrame extends JFrame {
         gbc.gridy = 1;
         centerPanel.add(lblRut, gbc);
         
-        txtRut = new JTextField(10);
+        txtRut = new JTextField(15);
         txtRut.setFont(fieldFont);
+        txtRut.setPreferredSize(new Dimension(200, 35));
         gbc.gridx = 1;
         centerPanel.add(txtRut, gbc);
 
@@ -105,8 +107,9 @@ public class AgendamientoFrame extends JFrame {
         gbc.gridy = 2;
         centerPanel.add(lblTelefono, gbc);
         
-        txtTelefono = new JTextField(12);
+        txtTelefono = new JTextField(15);
         txtTelefono.setFont(fieldFont);
+        txtTelefono.setPreferredSize(new Dimension(200, 35));
         gbc.gridx = 1;
         centerPanel.add(txtTelefono, gbc);
 
@@ -135,13 +138,13 @@ public class AgendamientoFrame extends JFrame {
         datePicker.getMonthView().setTraversable(true);
         datePicker.getMonthView().setShowingLeadingDays(true);
         datePicker.getMonthView().setShowingTrailingDays(true);
-        datePicker.setPreferredSize(new Dimension(150, 30));
+        datePicker.setPreferredSize(new Dimension(200, 35));
         
         // fecha de hoy disponible y borra dia anteriores
         datePicker.getMonthView().setLowerBound(Calendar.getInstance().getTime());
         
         // estilo de fecha con ia revisar
-        datePicker.getEditor().setFont(new Font("Arial", Font.PLAIN, 14));
+        datePicker.getEditor().setFont(new Font("Segoe UI", Font.PLAIN, 14));
         datePicker.getEditor().setBackground(Color.WHITE);
         datePicker.getEditor().setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
         
@@ -157,6 +160,7 @@ public class AgendamientoFrame extends JFrame {
 
         cmbHoraInicio = new JComboBox<>();
         cmbHoraInicio.setFont(fieldFont);
+        cmbHoraInicio.setPreferredSize(new Dimension(200, 35));
         llenarHorarios(cmbHoraInicio);
         gbc.gridx = 1;
         centerPanel.add(cmbHoraInicio, gbc);
@@ -170,18 +174,28 @@ public class AgendamientoFrame extends JFrame {
 
         cmbHoraFin = new JComboBox<>();
         cmbHoraFin.setFont(fieldFont);
+        cmbHoraFin.setPreferredSize(new Dimension(200, 35));
         llenarHorarios(cmbHoraFin);
         gbc.gridx = 1;
         centerPanel.add(cmbHoraFin, gbc);
 
         // boton agendar
         JButton btnAgendar = new JButton("Agendar Cancha");
-        btnAgendar.setFont(new Font("Arial", Font.BOLD, 12));
+        btnAgendar.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnAgendar.setPreferredSize(new Dimension(250, 40));
+        btnAgendar.setBackground(new Color(255, 165, 0));
+        btnAgendar.setForeground(Color.BLACK);
+        btnAgendar.setFocusPainted(false);
+        btnAgendar.setBorderPainted(false);
+        btnAgendar.setOpaque(true);
+        btnAgendar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
         gbc.gridx = 0;
         gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(20, 8, 0, 8);
         centerPanel.add(btnAgendar, gbc);
 
         // panel derecho para lista de agendamientos
