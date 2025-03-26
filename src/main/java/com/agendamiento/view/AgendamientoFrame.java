@@ -42,7 +42,7 @@ public class AgendamientoFrame extends JFrame {
         setSize(1600, 900);
         setLocationRelativeTo(null);
 
-        // Inicializar imágenes
+        // inicializar imagenes
         cargarImagenes();
 
         // panel principal
@@ -62,7 +62,7 @@ public class AgendamientoFrame extends JFrame {
         JScrollPane scrollCanchas = new JScrollPane(canchasPanel);
         leftPanel.add(scrollCanchas, BorderLayout.CENTER);
 
-        // panel central datos del que solicita agerandamtno
+        // panel central datos del que solicita agendamiento
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(51, 153, 255), 2), "Detalles de Agendamiento"));
         centerPanel.setPreferredSize(new Dimension(300, 0));
@@ -70,7 +70,7 @@ public class AgendamientoFrame extends JFrame {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // datos del asolicitante
+        // datos del solicitante
         Font labelFont = new Font("Segoe UI", Font.BOLD, 14);
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
 
@@ -87,7 +87,7 @@ public class AgendamientoFrame extends JFrame {
         gbc.gridx = 1;
         centerPanel.add(txtNombre, gbc);
 
-        // grita tu rut
+        // rut
         JLabel lblRut = new JLabel("RUT:");
         lblRut.setFont(labelFont);
         gbc.gridx = 0;
@@ -120,12 +120,12 @@ public class AgendamientoFrame extends JFrame {
         gbc.gridy = 3;
         centerPanel.add(lblFecha, gbc);
 
-        // calendario de swing
+        // calendario
         datePicker = new JXDatePicker();
         datePicker.setDate(Calendar.getInstance().getTime());
         datePicker.setFormats(new java.text.SimpleDateFormat("dd/MM/yyyy"));
         
-        // estilo y forma de calendario
+        // estilo del calendario
         datePicker.getMonthView().setSelectionModel(new SingleDaySelectionModel());
         datePicker.getMonthView().setTodayBackground(new Color(255, 220, 220));
         datePicker.getMonthView().setMonthStringBackground(new Color(200, 200, 255));
@@ -140,10 +140,10 @@ public class AgendamientoFrame extends JFrame {
         datePicker.getMonthView().setShowingTrailingDays(true);
         datePicker.setPreferredSize(new Dimension(200, 35));
         
-        // fecha de hoy disponible y borra dia anteriores
+        // fecha de hoy disponible y borra dias anteriores
         datePicker.getMonthView().setLowerBound(Calendar.getInstance().getTime());
         
-        // estilo de fecha con ia revisar
+        // estilo de fecha
         datePicker.getEditor().setFont(new Font("Segoe UI", Font.PLAIN, 14));
         datePicker.getEditor().setBackground(Color.WHITE);
         datePicker.getEditor().setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
@@ -224,7 +224,7 @@ public class AgendamientoFrame extends JFrame {
                 JTabbedPane tabbedPaneTiempo = new JTabbedPane(JTabbedPane.TOP);
                 tabbedPaneTiempo.setFont(new Font("Arial", Font.BOLD, 12));
                 
-                // tablas con agendamieto cancha
+                // tablas con agendamiento cancha
                 String[] columnas = {"Día", "Mes", "Año", "Hora", "Nombre", "RUT", "Teléfono", "Acciones"};
                 
                 // crear y almacenar modelos para esta cancha
@@ -313,17 +313,17 @@ public class AgendamientoFrame extends JFrame {
         mainPanel.add(centerPanel, BorderLayout.CENTER);
         mainPanel.add(rightPanel, BorderLayout.EAST);
 
-        // events
+        // eventos
         btnAgendar.addActionListener(e -> realizarAgendamiento());
         cmbHoraInicio.addActionListener(e -> actualizarHoraFin());
 
-        // agendamientos existnte
+        // agendamientos existentes
         cargarAgendamientos();
 
         add(mainPanel);
     }
 
-    // Cargar imágenes desde recursos
+    // cargar imagenes desde recursos
     private void cargarImagenes() {
         imagenesCanchas = new HashMap<>();
         try {
@@ -332,7 +332,7 @@ public class AgendamientoFrame extends JFrame {
             ImageIcon imgFutsal = new ImageIcon(getClass().getResource("/images/futsal.jpg"));
             ImageIcon imgBabyFutbol = new ImageIcon(getClass().getResource("/images/baby_futbol.jpg"));
 
-            //tamaño imagen
+            // tamaño imagen
             int width = 200;  
             int height = 150;
             
@@ -340,7 +340,7 @@ public class AgendamientoFrame extends JFrame {
             imagenesCanchas.put("futsal", new ImageIcon(imgFutsal.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH)));
             imagenesCanchas.put("baby futbol", new ImageIcon(imgBabyFutbol.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH)));
         } catch (Exception e) {
-            System.err.println("Error al cargar imágenes: " + e.getMessage());
+            System.err.println("Error al cargar imagenes: " + e.getMessage());
         }
     }
 
@@ -348,12 +348,12 @@ public class AgendamientoFrame extends JFrame {
         canchasPanel.removeAll();
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Modificar la consulta SQL para evitar duplicados
+            // modificar la consulta sql para evitar duplicados
             String sql = "SELECT DISTINCT nombre, tipo FROM canchas ORDER BY nombre";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
 
-            // Crear un Set para rastrear las canchas ya procesadas
+            // crear un set para rastrear las canchas ya procesadas
             java.util.Set<String> canchasProcesadas = new java.util.HashSet<>();
 
             while (rs.next()) {
@@ -361,7 +361,7 @@ public class AgendamientoFrame extends JFrame {
                 String tipo = rs.getString("tipo");
                 String claveCancha = nombre + "|" + tipo;
                 
-                // Solo procesar si no hemos visto esta combinación antes
+                // solo procesar si no hemos visto esta combinacion antes
                 if (!canchasProcesadas.contains(claveCancha)) {
                     canchasProcesadas.add(claveCancha);
                     
@@ -370,51 +370,51 @@ public class AgendamientoFrame extends JFrame {
                     canchaPanel.setBackground(Color.WHITE);
                     canchaPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     
-                    // Etiqueta con imagen
+                    // etiqueta con imagen
                     JLabel lblImagen = new JLabel(imagenesCanchas.get(tipo.toLowerCase()));
                     lblImagen.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
                     
-                    // Panel de información con GridLayout para mejor espaciado
+                    // panel de informacion con gridlayout para mejor espaciado
                     JPanel infoPanel = new JPanel(new GridLayout(2, 1, 5, 5));
                     infoPanel.setBackground(Color.WHITE);
                     
-                    // Nombre de la cancha con fuente más grande
+                    // nombre de la cancha con fuente mas grande
                     JLabel lblNombre = new JLabel(nombre);
-                    lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Aumentado de 14 a 18
+                    lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 18));
                     lblNombre.setHorizontalAlignment(JLabel.CENTER);
                     
-                    // Tipo de cancha también con fuente más grande
+                    // tipo de cancha tambien con fuente mas grande
                     JLabel lblTipo = new JLabel(tipo);
-                    lblTipo.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // Aumentado de 12 a 16
+                    lblTipo.setFont(new Font("Segoe UI", Font.PLAIN, 16));
                     lblTipo.setHorizontalAlignment(JLabel.CENTER);
                     
                     infoPanel.add(lblNombre);
                     infoPanel.add(lblTipo);
-                    infoPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8)); // Añadir padding
+                    infoPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
                     
                     canchaPanel.add(lblImagen, BorderLayout.CENTER);
                     canchaPanel.add(infoPanel, BorderLayout.SOUTH);
                     
-                    // Hacer el panel seleccionable con efectos visuales mejorados
+                    // hacer el panel seleccionable con efectos visuales mejorados
                     canchaPanel.addMouseListener(new java.awt.event.MouseAdapter() {
                         public void mouseClicked(java.awt.event.MouseEvent evt) {
                             seleccionarCancha(nombre + " - " + tipo);
-                            // Actualizar bordes de todos los paneles
+                            // actualizar bordes de todos los paneles
                             for (Component c : canchasPanel.getComponents()) {
                                 if (c instanceof JPanel) {
                                     JPanel panel = (JPanel) c;
                                     panel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
                                     panel.setBackground(Color.WHITE);
-                                    // Resetear el tamaño de fuente de las etiquetas
+                                    // resetear el tamaño de fuente de las etiquetas
                                     Component[] components = ((JPanel)panel.getComponent(1)).getComponents();
                                     ((JLabel)components[0]).setFont(new Font("Segoe UI", Font.BOLD, 18));
                                     ((JLabel)components[1]).setFont(new Font("Segoe UI", Font.PLAIN, 16));
                                 }
                             }
-                            // Resaltar el panel seleccionado
+                            // resaltar el panel seleccionado
                             canchaPanel.setBorder(BorderFactory.createLineBorder(new Color(51, 153, 255), 3));
                             canchaPanel.setBackground(new Color(242, 247, 255));
-                            // Aumentar el tamaño de la fuente cuando está seleccionado
+                            // aumentar el tamaño de la fuente cuando esta seleccionado
                             Component[] components = infoPanel.getComponents();
                             ((JLabel)components[0]).setFont(new Font("Segoe UI", Font.BOLD, 20));
                             ((JLabel)components[1]).setFont(new Font("Segoe UI", Font.PLAIN, 18));
@@ -446,8 +446,8 @@ public class AgendamientoFrame extends JFrame {
     }
 
     private void llenarHorarios(JComboBox<LocalTime> comboBox) {
-        LocalTime inicio = LocalTime.of(8, 0); // 8:00 AM
-        LocalTime fin = LocalTime.of(22, 0);   // 10:00 PM
+        LocalTime inicio = LocalTime.of(8, 0); // 8:00 am
+        LocalTime fin = LocalTime.of(22, 0);   // 10:00 pm
         
         while (!inicio.isAfter(fin)) {
             comboBox.addItem(inicio);
@@ -460,21 +460,21 @@ public class AgendamientoFrame extends JFrame {
         if (horaInicio != null) {
             cmbHoraFin.removeAllItems();
             LocalTime hora = horaInicio.plusHours(1);
-            LocalTime fin = LocalTime.of(22, 0); // Cambiado a 22:00 para evitar problemas
+            LocalTime fin = LocalTime.of(22, 0); // cambiado a 22:00 para evitar problemas
             
             while (!hora.isAfter(fin)) {
                 cmbHoraFin.addItem(hora);
                 hora = hora.plusHours(1);
             }
             
-            // Si no hay horas disponibles, mostrar mensaje
+            // si no hay horas disponibles, mostrar mensaje
             if (cmbHoraFin.getItemCount() == 0) {
                 JOptionPane.showMessageDialog(this, 
-                    "No hay horarios disponibles después de la hora seleccionada",
+                    "No hay horarios disponibles despues de la hora seleccionada",
                     "Aviso", 
                     JOptionPane.INFORMATION_MESSAGE);
-                cmbHoraInicio.setSelectedIndex(0); // Resetear a la primera hora
-                actualizarHoraFin(); // Actualizar nuevamente
+                cmbHoraInicio.setSelectedIndex(0); // resetear a la primera hora
+                actualizarHoraFin(); // actualizar nuevamente
             }
         }
     }
@@ -487,7 +487,7 @@ public class AgendamientoFrame extends JFrame {
         try (Connection conn = DatabaseConnection.getConnection()) {
             System.out.println("Iniciando carga de agendamientos...");
             
-            // Limpiar todas las tablas
+            // limpiar todas las tablas
             for (DefaultTableModel model : modelosHoy.values()) {
                 model.setRowCount(0);
             }
@@ -510,7 +510,7 @@ public class AgendamientoFrame extends JFrame {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, usuarioId);
                 try (ResultSet rs = pstmt.executeQuery()) {
-                    // Obtener fecha actual
+                    // obtener fecha actual
                     java.util.Date hoy = new java.util.Date();
                     java.util.Calendar cal = java.util.Calendar.getInstance();
                     cal.setTime(hoy);
@@ -537,7 +537,7 @@ public class AgendamientoFrame extends JFrame {
                             "Eliminar"
                         };
 
-                        // Obtener los modelos correspondientes a la cancha
+                        // obtener los modelos correspondientes a la cancha
                         DefaultTableModel modelHoy = modelosHoy.get(nombreCancha);
                         DefaultTableModel modelSemana = modelosSemana.get(nombreCancha);
                         DefaultTableModel modelPosteriores = modelosPosteriores.get(nombreCancha);
@@ -547,7 +547,7 @@ public class AgendamientoFrame extends JFrame {
                             continue;
                         }
 
-                        // Clasificar el agendamiento según la fecha
+                        // clasificar el agendamiento segun la fecha
                         if (fechaEsHoy(fechaAgendamiento)) {
                             modelHoy.addRow(row);
                             System.out.println("Agregado a Hoy: " + nombreCancha);
@@ -563,7 +563,7 @@ public class AgendamientoFrame extends JFrame {
                 }
             }
 
-            // Ajustar anchos de columna para todas las tablas
+            // ajustar anchos de columna para todas las tablas
             for (JTable tabla : tablasHoy.values()) {
                 ajustarAnchoColumnas(tabla);
             }
@@ -642,7 +642,7 @@ public class AgendamientoFrame extends JFrame {
             return;
         }
 
-        // Ajustar el ancho de las columnas según el contenido
+        // ajustar el ancho de las columnas segun el contenido
         int[] anchos = {60, 100, 70, 150, 150, 100, 100, 80};
         
         for (int i = 0; i < tabla.getColumnCount() && i < anchos.length; i++) {
@@ -650,21 +650,21 @@ public class AgendamientoFrame extends JFrame {
             columna.setPreferredWidth(anchos[i]);
             columna.setMinWidth(anchos[i]);
             
-            // La última columna (Acciones) tiene un ancho fijo
+            // la ultima columna (acciones) tiene un ancho fijo
             if (i == tabla.getColumnCount() - 1) {
                 columna.setMaxWidth(anchos[i]);
             }
         }
         
-        // Configurar la altura de las filas
+        // configurar la altura de las filas
         tabla.setRowHeight(35);
     }
 
     private JTable crearTablaPersonalizada(DefaultTableModel modelo) {
-        // Crear la tabla con el modelo proporcionado
+        // crear la tabla con el modelo proporcionado
         JTable tabla = new JTable(modelo);
         
-        // Configurar la apariencia de la tabla
+        // configurar la apariencia de la tabla
         tabla.setRowHeight(30);
         tabla.setIntercellSpacing(new Dimension(10, 5));
         tabla.setGridColor(Color.LIGHT_GRAY);
@@ -674,16 +674,16 @@ public class AgendamientoFrame extends JFrame {
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabla.setAutoCreateRowSorter(true);
 
-        // Configurar el renderizador para centrar el contenido
+        // configurar el renderizador para centrar el contenido
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 
-        // Aplicar el renderizador centrado a todas las columnas excepto la última
+        // aplicar el renderizador centrado a todas las columnas excepto la ultima
         for (int i = 0; i < tabla.getColumnCount() - 1; i++) {
             tabla.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        // Configurar el renderizador para el botón eliminar
+        // configurar el renderizador para el boton eliminar
         tabla.getColumnModel().getColumn(tabla.getColumnCount() - 1).setCellRenderer(new DefaultTableCellRenderer() {
             private final JButton button = new JButton("Eliminar");
             {
@@ -701,7 +701,7 @@ public class AgendamientoFrame extends JFrame {
             }
         });
 
-        // Configurar el manejador de clics para el botón eliminar
+        // configurar el manejador de clics para el boton eliminar
         tabla.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -751,18 +751,18 @@ public class AgendamientoFrame extends JFrame {
         try (Connection conn = DatabaseConnection.getConnection()) {
             DefaultTableModel model = (DefaultTableModel) tabla.getModel();
             
-            // Obtener los datos de la fila
+            // obtener los datos de la fila
             String dia = model.getValueAt(row, 0).toString();
             String mes = model.getValueAt(row, 1).toString();
             String año = model.getValueAt(row, 2).toString();
             String hora = model.getValueAt(row, 3).toString();
             String rut = model.getValueAt(row, 5).toString();
             
-            // Construir la fecha en formato correcto para MySQL
+            // construir la fecha en formato correcto para mysql
             String fecha = String.format("%s-%s-%s", año, obtenerNumeroMes(mes), dia);
             String[] horas = hora.split(" - ");
             
-            // Primero obtener el ID del agendamiento
+            // primero obtener el id del agendamiento
             String sqlSelect = "SELECT id FROM agendamientos " +
                              "WHERE usuario_id = ? " +
                              "AND DATE(fecha) = ? " +
@@ -782,7 +782,7 @@ public class AgendamientoFrame extends JFrame {
                 if (rs.next()) {
                     int agendamientoId = rs.getInt("id");
                     
-                    // Ahora eliminar usando el ID
+                    // ahora eliminar usando el id
                     String sqlDelete = "DELETE FROM agendamientos WHERE id = ?";
                     try (PreparedStatement pstmtDelete = conn.prepareStatement(sqlDelete)) {
                         pstmtDelete.setInt(1, agendamientoId);
@@ -794,7 +794,7 @@ public class AgendamientoFrame extends JFrame {
                                 "Éxito",
                                 JOptionPane.INFORMATION_MESSAGE);
                             
-                            // Recargar los agendamientos
+                            // recargar los agendamientos
                             SwingUtilities.invokeLater(() -> {
                                 cargarAgendamientos();
                                 tabla.repaint();
@@ -862,12 +862,12 @@ public class AgendamientoFrame extends JFrame {
             return;
         }
 
-        // Nueva validación de fecha que solo compara el día, mes y año
+        // nueva validacion de fecha que solo compara el dia, mes y año
         Calendar calHoy = Calendar.getInstance();
         Calendar calSeleccionada = Calendar.getInstance();
         calSeleccionada.setTime(fechaSeleccionada);
         
-        // Resetear las horas, minutos, segundos y milisegundos para ambas fechas
+        // resetear las horas, minutos, segundos y milisegundos para ambas fechas
         calHoy.set(Calendar.HOUR_OF_DAY, 0);
         calHoy.set(Calendar.MINUTE, 0);
         calHoy.set(Calendar.SECOND, 0);
@@ -898,10 +898,10 @@ public class AgendamientoFrame extends JFrame {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            conn.setAutoCommit(false); // Iniciar transacción
+            conn.setAutoCommit(false); // iniciar transaccion
 
             try {
-                // Obtener ID de la cancha
+                // obtener id de la cancha
                 String sqlCancha = "SELECT id FROM canchas WHERE nombre = ? AND tipo = ?";
                 PreparedStatement pstmtCancha = conn.prepareStatement(sqlCancha);
                 pstmtCancha.setString(1, nombreCancha);
@@ -913,7 +913,7 @@ public class AgendamientoFrame extends JFrame {
                 }
                 int canchaId = rsCancha.getInt("id");
 
-                // Verificar si ya existe un agendamiento para la misma cancha, fecha y hora
+                // verificar si ya existe un agendamiento para la misma cancha, fecha y hora
                 String sqlCheckAgendamiento = "SELECT COUNT(*) FROM agendamientos " +
                     "WHERE cancha_id = ? AND fecha = ? AND " +
                     "((hora_inicio <= ? AND hora_fin > ?) OR " +
@@ -936,7 +936,7 @@ public class AgendamientoFrame extends JFrame {
                     throw new SQLException("Ya existe un agendamiento para este horario");
                 }
 
-                // Insertar agendamiento con los datos personales
+                // insertar agendamiento con los datos personales
                 String sqlAgendamiento = "INSERT INTO agendamientos (usuario_id, cancha_id, fecha, hora_inicio, hora_fin, nombre_cliente, rut_cliente, telefono_cliente) " +
                                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement pstmtAgendamiento = conn.prepareStatement(sqlAgendamiento);
@@ -950,10 +950,10 @@ public class AgendamientoFrame extends JFrame {
                 pstmtAgendamiento.setString(8, telefono);
                 pstmtAgendamiento.executeUpdate();
 
-                conn.commit(); // Confirmar transacción
+                conn.commit(); // confirmar transaccion
                 JOptionPane.showMessageDialog(this, "Agendamiento realizado exitosamente!");
                 
-                // Limpiar los campos después del agendamiento exitoso
+                // limpiar los campos despues del agendamiento exitoso
                 txtNombre.setText("");
                 txtRut.setText("");
                 txtTelefono.setText("");
@@ -961,10 +961,10 @@ public class AgendamientoFrame extends JFrame {
                 cmbHoraFin.setSelectedIndex(0);
                 datePicker.setDate(Calendar.getInstance().getTime());
                 
-                // Recargar los agendamientos
+                // recargar los agendamientos
                 cargarAgendamientos();
             } catch (SQLException ex) {
-                conn.rollback(); // Revertir transacción en caso de error
+                conn.rollback(); // revertir transaccion en caso de error
                 throw ex;
             }
         } catch (SQLException ex) {
